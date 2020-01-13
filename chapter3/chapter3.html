@@ -14,9 +14,9 @@
 class: center, middle, inverse, title-slide
 
 # ScPoEconometrics
-## Session 3
+## Session 3 : Simple linear Regression
 ### Pierre Villedieu
-### SciencesPo Paris </br> 2020-01-10
+### SciencesPo Paris </br> 2020-01-13
 
 ---
 
@@ -433,29 +433,13 @@ To be fixed
 
 ```r
 # 1.
-all.equal(mean(sd$y_hat), mean(sd$y))
-```
+# all.equal(mean(sd$y_hat), mean(sd$y))
 
-```
-## [1] TRUE
-```
-
-```r
 # 2.
-all.equal(mean(sd$error), 0)
-```
+# all.equal(mean(sd$error), 0)
 
-```
-## [1] TRUE
-```
-
-```r
 # 3.
-all.equal(cov(sd$error,sd$y_hat), 0)
-```
-
-```
-## [1] TRUE
+# all.equal(cov(sd$error,sd$y_hat), 0)
 ```
 ]
 
@@ -557,31 +541,116 @@ To be fixed
 
 # An Example - Log Wage Equation
 
+Let's consider the following example concerning wage data collected in the [1976 Current Population Survey](https://www.census.gov/programs-surveys/cps/library.1976.html) in the USA. 
 
+We want to investigate the relationship between average hourly earnings, and years of education. 
+
+* The data come from the `wooldridge` package. Load it into your global environment (`.GlobalEnv`) with the function `data()`.
+
+
+
+* Briefly describe the data and produce a plot to vizualize the link between `wage` and `education`.
+--
+&lt;img src="chapter3_files/figure-html/unnamed-chunk-21-1.svg" style="display: block; margin: auto;" /&gt;
 ---
 
 # An Example - Log Wage Equation
 
+OLS regression : let's regress the wage on the education. For this you have to use the `lm()` function.
+
+--
+
+
+```r
+my_reg = lm(wage ~ educ, data = wage1)
+```
+
+--
+
+We can add the resulting regression line to our last plot
+
+.pull-left[
+
+
+```r
+plotfun(wage1)
+abline(my_reg, col = 'black', lw = 2) # add regression line
+```
+]
+
+--
+
+.pull-right[
+&lt;img src="chapter3_files/figure-html/unnamed-chunk-24-1.svg" style="display: block; margin: auto;" /&gt;
+
+]
+
 
 ---
+class: inverse
 
-# An Example - Log Wage Equation
+# An Example - Log Wage Equation : Task 
 
+**Questions : Interpretation**
+
+Here is the summary of the OLS regression. 
+
+.pull-left[
+
+
+```r
+summary(my_reg)
+```
+
+```
+## 
+## Call:
+## lm(formula = wage ~ educ, data = wage1)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -5.3396 -2.1501 -0.9674  1.1921 16.6085 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -0.90485    0.68497  -1.321    0.187    
+## educ         0.54136    0.05325  10.167   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 3.378 on 524 degrees of freedom
+## Multiple R-squared:  0.1648,	Adjusted R-squared:  0.1632 
+## F-statistic: 103.4 on 1 and 524 DF,  p-value: &lt; 2.2e-16
+```
+]
+
+--
+
+.pull-right[
+
+1) With zero year of education, the hourly wage is about **??** dollars per hour.
+
+2) Each additional year of education increase hourly wage by **??** cents.
+
+3) Compute the predicted wage associated to 15 years of education.
+]
 
 ---
+class: inverse 
 
-# An Example - Log Wage Equation
+# An Example - Log Wage Equation : Task
 
+**Answers** 
 
----
+Answer 1) -0.9 dollars per hour (row named `(Intercept)`)
 
-# An Example - Log Wage Equation
+--
 
+Answer 2) Each additional year of education increase hourly wage by 54 cents. (row named `educ`)
 
----
+--
 
-# An Example - Log Wage Equation
-
+Answer 3) We predict roughly **-0.9** + 0.541 * 15 = 7.215 dollars/h.
 
 ---
 
