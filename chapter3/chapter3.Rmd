@@ -1,10 +1,11 @@
 ---
 title: "ScPoEconometrics"
 subtitle: "Session 3 : Simple linear Regression"
-author: "Pierre Villedieu"
+author: "F. Oswald, G. Kenedi and P. Villedieu"
 date: "SciencesPo Paris </br> `r Sys.Date()`"
 output:
   xaringan::moon_reader:
+    chakra: "https://cdnjs.cloudflare.com/ajax/libs/remark/0.14.0/remark.min.js"
     lib_dir: libs
     css: [default, "../css/scpo.css", "../css/scpo-fonts.css"]
     nature:
@@ -55,10 +56,10 @@ Plan
 
 # Data
 
-Student performance and class size 
+Let's start with the relation with **student performance and class size** 
 
 .pull-left[
-* Let's first download the data from [here](https://www.dropbox.com/s/2g16pid3eky44bp/grades_classize.RData?dl=0). ADD SOURCE
+* First, download the data from [here](https://www.dropbox.com/s/2g16pid3eky44bp/grades_classize.RData?dl=0). ADD SOURCE
 ```{r, echo=FALSE}
 grades = read.csv2("https://www.dropbox.com/s/jrvjrdcly0igbed/grades_classize.csv?dl=1")
 ```
@@ -74,9 +75,10 @@ grades = read.csv2("https://www.dropbox.com/s/jrvjrdcly0igbed/grades_classize.cs
 --
 
 .pull-right[
-* Let's plot these two variables together. 
 
-```{r,echo=FALSE,fig.align='center',fig.height=7,fig.width=8}
+Let's plot these two variables together. 
+
+```{r,echo=FALSE,fig.align='center',fig.height=5,fig.width=8}
 plot(av_grade ~ classsize, data = grades,
      xlab = "Class size (classsize)",
      ylab = "Average math grade (av_grade)",
