@@ -50,83 +50,92 @@ overwrite = FALSE
 
 # Where Did We Stop Last Week?
 
-.pull-left[
-* Last week we learned about *sampling distributions*
 
-* We took repeated samples from a population (our pasta bowl) and computed an **estimate** of the sample proportion $\hat{p}$ over and over again
+* Last week we learned about **sampling distributions**
 
-* We took 1000 (!) samples and looked how the sampling distribution evolved as we increased sample sizes from $n=25$ to $n=100$. 
+* We took repeated **random samples** from a our **population** (i.e. our pasta bowl)
 
-* Our estimates became *more precise* as $n$ increased. 
+  * For each sample, we computed the **sample estimate** $\hat{p}$ of the proportion of green pasta in the bowl $p$, i.e. the true value. 
 
-]
+* Looking at the resulting sampling distribution, we saw that it is **normally shaped around the true value**. 
+  * Random sampling produces **unbiased estiamtes**. 
+  
+* We also illustrated the role of sample size: as we consider samples of bigger size, the sampling distribution is **narrower**. 
 
---
+  * In other words, the **standard deviation of the sample estimate** decreases.
 
-.pull-right[
-* We introduced notation: 
-    * population size $N$, 
-    * *point estimate* (like $\hat{p}$), 
-    * standard error *of* an estimate
-
-* We said *random sampling produces **unbiased** estimates*.
-
-* Our sample statistics provided **good guesses** about the true population parameters of interest.
-]
+* Overall, looking at the sampling distribution it seemed fairly easy to infer what the true proportion of green pasta was. 
 
 ---
+
+background-image: url(https://media.giphy.com/media/hXG93399r19vi/giphy.gif)
+background-position: 18% 45%
+background-size: 450px
+
+# Back to reality
+
+.pull-right[
+
+* In real life we only get to take **one** sample from the population.
+
+  * So nobody could ever take **1000** samples from the population!
+
+* Also, we obviously don't know about the true proportion of green pasta!
+  
+  * That's the object of our interest. 
+
+* So what on earth was all of this good for? Fun Only?! 😧.
+
+]
+
+* Well, even unobserved, we **know** that the sampling distribution does exist, and even better, we know how it behaves!
+
+* Let's see what we can do with this...
+
+---
+
 layout: false
 class: title-slide-section-red, middle
 
 # Confidence Intervals
 
 ---
+
 layout: true
 
 <div class="my-footer"><img src="../img/logo/ScPo-shield.png" style="height: 60px;"/></div> 
 
 ---
-background-image: url(https://media.giphy.com/media/hXG93399r19vi/giphy.gif)
-background-position: 10% 50%
-background-size: 500px
 
-# Reality Check
+# From Point Estimate to Confidence Intervals
 
-.pull-right[
-* Who could ever take **1000** samples for any study?!
+* From now, we only get **point estimates** from our samples: either simple statistics like *means* or *proportions* or *regression coefficients*
 
-* Also, we **knew** the true population proportion of red balls/green Fusilli!
+  * From a pasta sample, we get $\hat{p}$: the proportion of green pasta in that sample. 
 
-* If we knew in real life, we wouldn't have to take samples altogether, would we?
+* We know that this sample estimate differs from the true population parameter because of sampling variation. 
 
-* So what on earth was all of this good for? Fun Only?! `r emo::ji("anguished")`. 
-]
+* The question is how much. **What could be plausible values for the popluation parameter given the data we have?** 
+
+* A **Confidence Interval** provides an estimate for this range of plausible values. 
+
+  * The point estimate is our best guess for the popluation parameter
+
+  * The confidence interval will tell us how confident we can be that the true value is close to our estimate.
 
 ---
 
-# Real Life Sampling
+# Constructing Confidence Intervals 
 
-.pull-left[
-* In reality we only get to take **one** sample from the population.
-
-* Still we *know* now that there exists a *sampling distribution*. 
-
-* In other words: we *know* that there is sampling variation.
-
-* With one sample only, how can we know what it looks like?
-]
-
---
-
-.pull-right[
 * There are several approaches to construct CI's:
-    1. Theory: Use mathematical formulas to derive the sampling distributions for our estimators under certain conditions.
-    1. Simulation. We can use the **Bootstrap** method to *reconstruct* the sampling distribution.
+    
+    1. *Theory*: Use mathematical formulas (**Central Limit Theorem**) to derive the sampling distributions for our estimators under certain conditions.
+    
+    1. *Simulation.* We can use the **Bootstrap** method to *reconstruct* the sampling distribution.
     
 * We'll focus on the bootstrap to give you the intuition and come back to the maths approach later.
 
 * But first: what is a *bootstrap*?
-]
 
 ---
 
@@ -135,7 +144,7 @@ background-size: 500px
 
 * We are working as in real life now, so we have access to *only one random sample*.
 
-  * Here it is:
+  * Here it is, a sample of 40 pasta randomly drawn from our bowl:
 
 ```{r, echo = FALSE}
 bowl <- read.csv("https://www.dropbox.com/s/qpjsk0rfgc0gx80/pasta.csv?dl=1")
@@ -164,7 +173,7 @@ paste0("ID ", my_sample$pasta_ID, ": ", my_sample$color)
 
 * The proportion of green pasta in this sample is: $\hat{p} = `r p_hat`$.
 
-* We are going to resample **WITH REPLACEMENT** from our initial sample.
+* We are going to resample **WITH REPLACEMENT** from our sample.
 
 * ***Intuition***: Our sample becomes our population and we draw samples from it to construct a simulated distribution. 
 
