@@ -660,140 +660,114 @@ visualize(null_distribution, bins = 10, fill = "darkgreen") +
 
 * *Interpretation*: The lower the p-value, the less consistent our Null hypothesis is with the observed statistic.
 
-* So, how to make a decision then? 
+* Ok but how to take a decision then? i.e. decide to reject `\(H_0\)` or not. 
 
 ---
 
 # Hypothesis Test Notation and Definitions #4
 
-* To decide if we reject `\(H_0\)` or not (i.e. binary decision) we set a **significance level** for the test. 
+* To decide wether we reject `\(H_0\)` or not, we set a **significance level** for the test. 
 
 * The **significance level** `\(\alpha\)` is a *cutoff* on the p-value. It's common to assume `\(\alpha = 5\%\)`.
-
-  * We choose it *before* conducting our hypothesis test. 
 
 * If the p-value falls below the cutoff `\(\alpha\)`, we **reject** the null hypothesis on the grounds that ***what we observe is too unlikely to happen*** under the Null.
 
 * Small p-value: The red line is *too far* from the center of the Null distribution. Observing the red line would have happened with very small probability only. 
 
+* Let's illustrate how it works in our example. 
 ---
 
 # Visualize the P-value
 
 .pull-left[
-
-```r
-visualize(null_distribution, bins = 10) + 
-  shade_p_value(obs_stat = obs_diff_prop,
-                direction = "right")
-```
-
 &lt;img src="CI_and_hypothesis_test_files/figure-html/unnamed-chunk-19-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 
 .pull-right[
-* `shade_p_value` adds the p-value based on `obs_diff_prop`, i.e 0.29.
 
-* `direction = "right"` represents our one-sided alternative `\(H_A:p_m - p_f &gt; 0\)`
-
-* *more extreme* means *bigger difference* here, hence *more to the right*.
-
-* If `\(H_A:p_m - p_f \neq 0\)`, we'd set `direction = "both"`
+&lt;/br&gt;
 
 * The red area **is the p-value**!
+
+* In our case *more extreme* means *bigger difference* (in favor of men).
+
+* Hence the p-value is the area *more to the right* from our observed stat. 0.292.
 
 * Is that a *big* or a *small* area?
 ]
 
 ---
 
-# Obtaining the p-value and Deciding to Reject
+# Obtaining the p-value and Deciding
 
-.pull-left[
-* Obtain the precise p-value with
+
     
-    ```r
-    p_value &lt;- null_distribution %&gt;% 
-      get_p_value(obs_stat = obs_diff_prop, direction = "right")
-    p_value
-    ```
-    
-    ```
-    ## # A tibble: 1 x 1
-    ##   p_value
-    ##     &lt;dbl&gt;
-    ## 1   0.023
-    ```
-    
-* So, the probability of observing a 29% difference in a world with no discrimination is only 2.3%. That probability is due to sampling variation.
-]
+* The red area, i.e. the p-value, equals **0.019** in our case.
+
+* Under *no discrimination assumption*, there is a 1.9% probability to observe a difference in promotion rate superior or equal to 29.2%. 
+
+* Now let's assume we set a 5% significance level, we have `\(1.9 &lt; 0.05\)`
+
+* So, we can reject `\(H_0\)`, i.e. the absence of discrimination, at the 5% significance level. 
+
+  * We also say that `\(\hat{p_m} - \hat{p_f} = 29.2\)`% is significantly different from 0 at the 5% level. 
+ 
+--
+
+* Suppose we had set `\(\alpha = 0.01 = 1\%\)`, would we have rejected the absence of discrimination at this level? 
 
 --
 
-.pull-right[
-* Suppose we had set `\(\alpha = 0.001 = 0.1\%\)`
+* Given that the p-value is *greater* than `\(\alpha\)`, i.e. 1.9% &gt; 0.1%, we would **fail to reject** the null `\(H_0:p_m - p_f = 0\)`. 
 
-* Given that the p-value is *greater* than `\(\alpha\)`, 
-    * i.e. 2.3% &gt; 0.1%,
-    * we would **fail to reject** the null `\(H_0:p_m - p_f = 0\)`. 
-
-* The p-value was not sufficiently small to convince us in this case.
-
-* What would have happened, had we set cutoff `\(\alpha = 0.05 = 5\%\)` instead?
-
-]
+  * The p-value was not sufficiently small to convince us in this case.
 
 ---
 
-# Testing Errors
+# Testing Errors #1
 
-.pull-left[
-* Working with probabilities implies that sometimes, we make an error.
+Working with probabilities implies that sometimes, we make **errors**.
 
-* 29% may be *unlikely* under `\(H_0\)`, but that doesn't mean it's *impossible* to occur.
+* A 29%p difference may be *unlikely* under `\(H_0\)`, but that **doesn't mean it's *impossible* to occur**.
+
+  * In fact, we just found that such a difference (or higher) could occur in 1.9% of the cases.
 
 * So, it may happen that we sometimes reject `\(H_0\)`, when in fact it was true.
 
+* Setting 5% significance level, you make sure it won't happen more than 5% of the time. 
+
+---
+
+# Testing Errors #2
+
+* In fact, in hypothesis testing, there are even two types of errors to make! 😲:
+
+.pull-left[
+
+* Type I error: We Reject a *true* Null.
+
+* Type II error: We *fail* to reject a *wrong* Null.
+
+* In practice, we choose the frequency of a Type I error by setting `\(\alpha\)`, called the significance level
+
 ]
 
---
-
 .pull-right[
-* This is similar to a verdict reach in a court trial:
+
+
+![:scale 100%](../img/photos/gt_error_table_ht.png)
+
+This is similar to a verdict reach in a court trial:
 
 ![:scale 100%](../img/photos/gt_error_table.png)
 
-* In fact, in hypothesis testing:
-
-![:scale 100%](../img/photos/gt_error_table_ht.png)
 
 ]
 
 ---
 
-# Type I and Type II Errors
+# A Last recap 
 
-.pull-left[
-* So, there are even two types of errors to make! 😲
-
-* Type I: We convict an innocent person. We Reject a *true* Null.
-
-* Type II: We *fail* to convict a criminal. We *fail* to reject a *wrong* Null.
-
-* We **choose** the frequency of a Type I error by setting `\(\alpha\)`, called the **significance level**.
-]
-
---
-
-.pull-right[
-* The probability of committing a type II error is called `\(\beta\)`. The value `\(1-\beta\)`, i.e. the prob. of *not* making such an error, is called the **power** of a hypothesis test.
-
-* Ideally, `\(\alpha = \beta = 0\)`. However, with random sampling this is impossible. Also, both errors are inversely related. (see next slide)
-
-* So, typically we fix `\(\alpha\)` and try to maximize the power of the test. 
-
-* Given a certain frequency of convicting an innocent person, we try to make sure we convict as many true criminals as possible.
-]
 
 ---
 
