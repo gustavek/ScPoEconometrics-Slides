@@ -1,0 +1,1731 @@
+---
+title: "ScPoEconometrics"
+subtitle: "Differences-in-Differences"
+author: "Florian Oswald, Gustave Kenedi and Pierre Villedieu"
+date: "SciencesPo Paris </br> `r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: [default, "../css/scpo.css", "../css/scpo-fonts.css"]
+    nature:
+      beforeInit: ["../js/ru_xaringan.js"]
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: "16:9"
+    includes:
+      in_header: "../libs/partials/header.html"
+---
+
+layout: true
+
+<div class="my-footer"><img src="../img/logo/ScPo-shield.png" style="height: 60px;"/></div> 
+
+---
+
+```{r setup, include=FALSE,warning=FALSE,message=FALSE}
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  dev = "svg",
+  cache = TRUE,
+  fig.align = "center"
+  #fig.width = 11,
+  #fig.height = 5
+)
+
+library(emo)
+library(tidyverse)
+library(ggplot2)
+library(kableExtra)
+library(zoo)
+library(scales)
+library(grid)
+library(pBrackets)
+library(formattable)
+
+  # set seed
+set.seed(1234)
+```
+
+layout: true
+
+<div class="my-footer"><img src="../img/logo/ScPo-shield.png" style="height: 60px;"/></div> 
+
+---
+
+# Recap from last week
+
+* Applied inference tools to regression analysis
+
+* *Standard error* of regression coefficients
+
+* *Statistical significance* of regression coefficients
+
+--
+
+## Today: Program Evaluation
+
+.pull-left[
+***Differences-in-differences***
+  * Exploits changes in policy over time
+
+  * Find the appropriate control group
+
+  * *Empircal application:* impact of the ***minimum wage*** on ***employment***
+]
+
+--
+
+.pull-right[
+***Regression Discontinuity Design***
+
+  * Life is full of random rules
+
+  * Exploits knowledge of assignment rule
+  
+  * *Empirical application:* effect of ***alchol consumption*** on ***mortality***
+]
+
+---
+
+# Evaluation methods
+
+* Multiple regression often does not provide causal estimates because of ***selection on unobservables***.
+
+--
+
+* RCTs are one way to solve this problem but they are often impossible to do.
+
+--
+
+* Four main causal evaluation methods used in economics:
+
+  - ***instrumental variables (IV)***,
+  - ***propensity-score matching***,
+  - ***differences-in-differences (DiD)***, and
+  - ***regression discontinuity designs (RDD)***.
+
+--
+
+* These methods are used to identify __causal relationships__ between treatments and outcomes.
+
+--
+
+* In this lecture, we will cover two popular and rigorous program evaluation methods:
+
+    1. __differences-in-differences__,
+    1. __regression discontinuity designs__.
+    
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Differences-in-Differences
+
+---
+
+layout: true
+
+<div class="my-footer"><img src="../img/logo/ScPo-shield.png" style="height: 60px;"/></div> 
+
+---
+
+# Differences-in-Differences (DiD)
+
+* Usual starting point: subjects are not randomly allocated to treatment `r emo::ji("warning")`
+
+--
+
+## DiD Requirements:
+
+--
+
+* 2 time periods: before and after treatment.
+
+--
+
+* 2 groups:
+
+--
+  - ***control group:*** never receives treatment,
+
+--
+
+  - ***treatment group:*** initially untreated and then fully treated.
+  
+--
+
+* Under certain assumptions, control group can be used as the counterfactual for treatment group  
+
+---
+
+# An Example: Minimum Wage and Employment
+
+--
+
+* Imagine you are interested in assessing the __causal__ impact of increasing the minimum wage on (un)employment.
+
+--
+
+* Why is this not that straightforward? What should the control group be?
+
+--
+
+* Seminal 1994 [paper](http://davidcard.berkeley.edu/papers/njmin-aer.pdf) by prominent labor economists David Card and Alan Krueger entitled "Minimum Wages and Employment: A Case Study of the Fast-Food Industry in New Jersey and Pennsylvania"
+
+--
+
+* Estimates the effect of an increase in the minimum wage on the employment rate in the fast-food industry. Why this industry?
+
+---
+
+# Institutional Details
+
+* In the US, there is a national minimum wage, but states can depart from it.
+
+--
+
+* April 1, 1992: New Jersey minimum wage increases from $4.25 to $5.05 per hour.
+
+--
+
+* Neighboring Pennsylvania did not change its minimum wage level.
+
+--
+
+.pull-left[
+```{r, echo = F, out.width = "600px"}
+knitr::include_graphics("../img/photos/nj_penn_map.png")
+```
+]
+
+--
+
+.pull-right[
+<br>
+<br>
+Pennsylvania and New Jersey are ***very similar***: similar institutions, similar habits, similar consumers, similar incomes, similar weather, etc.
+]
+---
+
+# Card and Krueger (1994): Methodology
+
+* Surveyed 410 fast-food establishments in New Jersey (NJ) and eastern Pennsylvania
+
+--
+
+* Timing:
+
+--
+  - Survey before NJ MW increase: Feb/March 1992
+
+--
+  - Survey after NJ MW increase: Nov/Dec 1992
+
+--
+
+* What comparisons do you think they did?
+
+--
+
+.pull-left[
+Let's take a closer at their data
+```{r, echo = FALSE, eval = TRUE, results = "hide"}
+  # install package that contains the cleaned data
+remotes::install_github("b-rodrigues/diffindiff")
+  # load package
+library(diffindiff)
+  # load data
+ck1994 <- njmin
+```
+
+```{r, echo = TRUE, eval = FALSE}
+  # install package that contains the cleaned data
+remotes::install_github("b-rodrigues/diffindiff")
+  # load package
+library(diffindiff)
+  # load data
+ck1994 <- njmin
+```
+]
+
+--
+
+.pull-right[
+```{r}
+ck1994 %>%
+  select(sheet,chain,state,observation,empft,emppt) %>%
+  head()
+```
+
+]
+
+---
+
+# Card and Krueger DiD: Tabular Results
+
+.center[__Average Employment Per Store Before and After the Rise in NJ Minimum Wage__]
+```{r, echo = FALSE, eval = TRUE}
+# create average of FTE employment by state by survey wage
+ck1994 <- ck1994 %>%
+  mutate(empfte = empft + 0.5*emppt + nmgrs) %>%
+  group_by(state,observation) %>%
+  summarise(mean_fte = mean(empfte, na.rm = T))
+# change to data.frame format
+ck1994 <- as.data.frame(ck1994)
+
+# recode ck1994 to look nice
+ck_mw <- data.frame(
+  Variable = c("FTE employment before","FTE employment after","Change in mean FTE
+employment"),
+  PA = c(
+    ck1994[ck1994$state == "Pennsylvania" & ck1994$observation == "February 1992", "mean_fte"],
+    ck1994[ck1994$state == "Pennsylvania" & ck1994$observation == "November 1992", "mean_fte"],
+    ck1994[ck1994$state == "Pennsylvania" & ck1994$observation == "November 1992", "mean_fte"] -
+      ck1994[ck1994$state == "Pennsylvania" & ck1994$observation == "February 1992", "mean_fte"]),
+  NJ = c(
+    ck1994[ck1994$state == "New Jersey" & ck1994$observation == "February 1992", "mean_fte"],
+    ck1994[ck1994$state == "New Jersey" & ck1994$observation == "November 1992", "mean_fte"],
+    ck1994[ck1994$state == "New Jersey" & ck1994$observation == "November 1992", "mean_fte"] -
+      ck1994[ck1994$state == "New Jersey" & ck1994$observation == "February 1992", "mean_fte"]))
+
+# present in table form
+ck_mw %>%
+  mutate(
+    PA = round(PA, 2),
+    NJ = round(NJ, 2)
+  ) %>%
+  mutate(
+    PA = ifelse(PA<0,
+                cell_spec(PA, "html", background = viridis_pal()(2)[2], color = "white", bold = T, align = "c"),
+                cell_spec(PA, "html", background = NULL, color = NULL, align = "c")),
+    NJ = ifelse(NJ<1,
+                cell_spec(NJ, "html", background = viridis_pal()(2)[1], color = "white", bold = T, align = "center"),
+                cell_spec(NJ, "html", background = NULL, color = NULL, align = "c"))
+  ) %>%
+  kable(format = "html", digits = 2, escape = F,
+        col.names = c("Variables", "Pennsylvania", "New Jersey")) %>%
+  kable_styling("striped", full_width = F)
+```
+
+--
+
+* Employment in PA ***decreased*** while it ***increased*** in NJ!
+
+--
+
+## DiD Estimate
+
+Differences-in-differences causal estimate: $0.59 - (-2.17) = 2.76$
+
+--
+
+Interpretation: the minimum wage increase led to an __increase__ in FTE employment per store of 2.76 on average.
+
+--
+
+Yes the essence of differences-in-differences is _that_ simple! `r emo::ji("grinning")`
+
+--
+
+Let's look at these results graphically.
+
+---
+
+# DiD Graphically
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+ck_mw <- data.frame(
+  date = as.Date(c("010292","010292","011192","011192"), format = "%d%m%y"),
+  state = c("Pennsylvania","New Jersey","Pennsylvania","New Jersey"),
+  fte_emp = c(23.33,20.44,21.17,21.03)
+)
+
+gg_did <- ggplot(ck_mw, aes(x = date, y = fte_emp, color = state)) +
+  geom_vline(xintercept = as.Date("010492", format = "%d%m%y"), linetype = "longdash") +
+  geom_vline(xintercept = as.Date("010292", format = "%d%m%y"), linetype = "solid") +
+  geom_vline(xintercept = as.Date("011192", format = "%d%m%y"), linetype = "solid") +
+  ylim(17,24) +
+  scale_x_date(labels = date_format("%h %y"),
+               limits = c(min(ck_mw$date),as.Date("011292", format = "%d%m%y")),
+               date_breaks = "1 month",
+               minor_breaks = NULL) +
+  labs(x = NULL, y = "Average number of FTE employees per store", color = NULL) +
+  scale_colour_viridis_d() +
+  theme_bw(base_size = 16) + theme(legend.position="none") +
+  annotate("label", x = as.Date("1992-05-28"), y = 23.99, label = "New Jersey minimum wage increases", color = "black", size = 4.5) +
+  annotate("label", x = as.Date("1992-02-26"), y = 23.99, label = "Survey before", color = "black", size = 4.5) +
+  annotate("label", x = as.Date("1992-11-23"), y = 23.99, label = "Survey after", color = "black", size = 4.5)
+gg_did
+```
+
+---
+
+# DiD Graphically
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_graph <- gg_did +
+  geom_point(size = 3) +
+  geom_line() +
+  annotate("label", x = as.Date("1992-05-15"), y = 23, label = "Pennsylvania", color = viridis_pal()(2)[2], size = 6) +
+  annotate("label", x = as.Date("1992-05-01"), y = 21, label = "New Jersey", color = viridis_pal()(2)[1], size = 6)
+gg_did_graph
+```
+
+---
+
+# DiD Graphically
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did2 <- gg_did_graph +
+  geom_segment(aes(x = as.Date("010292", format = "%d%m%y"), y = ck_mw[2,"fte_emp"], xend = as.Date("011192", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]-(ck_mw[1,"fte_emp"]-ck_mw[3,"fte_emp"])),
+               color = "#FDE725FF", linetype = "dashed") +
+  annotate("label", x = as.Date("1992-05-10"), y = 18.9, label = "New Jersey counterfactual", color = viridis_pal()(2)[2], size = 6)
+gg_did2
+```
+
+---
+
+# DiD Graphically
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did2 +
+  annotate("text", x = as.Date("1992-11-26"), y = 19.7, label = "Treatment\nEffect", color = "black", size = 6)
+x = 623
+ymin = 150
+ymax = ymin+114
+grid.brackets(x,
+              ymin,
+              x,
+              ymax,
+              h = 0.05, lwd=1, col="black")
+```
+
+---
+
+# What if we had done a naive after/before comparison?
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_graph +
+  annotate("text", x = as.Date("1992-11-26"), y = 20.9, label = "Naive\nTreatment\nEffect", color = "black", size = 6) +
+  geom_segment(aes(x = as.Date("010292", format = "%d%m%y"), y = ck_mw[2,"fte_emp"], xend = as.Date("011192", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]),
+               color = viridis_pal()(2)[1], linetype = "dashed") +
+  annotate("label", x = as.Date("1992-06-08"), y = 20.1, label = "Naive New Jersey counterfactual", color = viridis_pal()(2)[1], size = 6)
+x = 623
+ymin = 150
+ymax = ymin+24
+grid.brackets(x,
+              ymin,
+              x,
+              ymax,
+              h = 0.05, lwd=1, col="black")
+
+```
+
+---
+
+# What if we had done a naive after/before comparison?
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_graph +
+  annotate("text", x = as.Date("1992-11-26"), y = 21.1, label = "Naive\nTreatment\nEffect", color = "black", size = 5) +
+  geom_segment(aes(x = as.Date("010292", format = "%d%m%y"), y = ck_mw[2,"fte_emp"], xend = as.Date("011192", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]),
+               color = viridis_pal()(2)[1], linetype = "dashed") +
+  annotate("label", x = as.Date("1992-06-15"), y = 20.1, label = "Naive New Jersey counterfactual", color = viridis_pal()(2)[1], size = 5) +
+  annotate("text", x = as.Date("1992-11-26"), y = 19.45, label = "Real\nTreatment\nEffect", color = "black", size = 5) +
+  geom_segment(aes(x = as.Date("010292", format = "%d%m%y"), y = ck_mw[2,"fte_emp"], xend = as.Date("011192", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]-(ck_mw[1,"fte_emp"]-ck_mw[3,"fte_emp"])),
+               color = "#FDE725FF", linetype = "dashed") +
+  annotate("label", x = as.Date("1992-05-20"), y = 18.9, label = "New Jersey counterfactual", color = viridis_pal()(2)[2], size = 5)
+x = 635
+ymin = 150
+ymax = ymin+24
+grid.brackets(x,
+              ymin,
+              x,
+              ymax,
+              h = 0.05, lwd=1, col="black")
+x = 623
+ymin = 150
+ymax = ymin+114
+grid.brackets(x,
+              ymin,
+              x,
+              ymax,
+              h = 0.05, lwd=1, col="black")
+
+```
+
+---
+
+# What if we had done a naive after NJ/PA comparison?
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_graph +
+  annotate("text", x = as.Date("1992-11-26"), y = 20.9, label = "Naive\nTreatment\nEffect", color = "black", size = 6)
+x = 623
+ymin = 142
+ymax = ymin+6
+grid.brackets(x,
+              ymin,
+              x,
+              ymax,
+              h = 0.05, lwd=1, col="black")
+
+```
+
+---
+
+# What if we had done a naive after NJ/PA comparison?
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_graph +
+  annotate("text", x = as.Date("1992-11-26"), y = 21.1, label = "Naive\nTreatment\nEffect", color = "black", size = 5) +
+  annotate("text", x = as.Date("1992-11-26"), y = 19.45, label = "Real\nTreatment\nEffect", color = "black", size = 5) +
+  geom_segment(aes(x = as.Date("010292", format = "%d%m%y"), y = ck_mw[2,"fte_emp"], xend = as.Date("011192", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]-(ck_mw[1,"fte_emp"]-ck_mw[3,"fte_emp"])),
+               color = "#FDE725FF", linetype = "dashed") +
+  annotate("label", x = as.Date("1992-05-20"), y = 18.9, label = "New Jersey counterfactual", color = viridis_pal()(2)[2], size = 5)
+x = 623
+ymin = 142
+ymax = ymin+6
+grid.brackets(x,
+              ymin,
+              x,
+              ymax,
+              h = 0.05, lwd=1, col="black")
+x = 623
+ymin = 150
+ymax = ymin+114
+grid.brackets(x,
+              ymin,
+              x,
+              ymax,
+              h = 0.05, lwd=1, col="black")
+
+```
+
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Estimation
+
+---
+
+layout: true
+
+<div class="my-footer"><img src="../img/logo/ScPo-shield.png" style="height: 60px;"/></div> 
+
+---
+
+# DiD in Regression Form
+
+* In practice, DiD is usually estimated on more than 2 periods (4 observations)
+
+* There are more data points before and after the policy change
+
+--
+
+3 ingredients:
+
+--
+
+1. __Treatment dummy variable__: $TREAT_s$ where the $s$ subscript reminds us that the treatment is at the state level
+
+--
+
+1. __Post-treatment periods dummy variables__: $POST_t$ where the $t$ subscript reminds us that this variable varies over time
+
+--
+
+1. __Interaction term between the two__: $TREAT_s \times POST_t$ `r emo::ji("point_right")` the ***coefficient on this term is the DiD causal effect***!
+
+---
+
+# DiD in Regression Form
+
+__Treatment dummy variable__
+$$
+TREAT_s = \begin{cases}\begin{array}{lcl}
+0 \quad \text{if } s = \text{Pennsylvania} \\\
+1 \quad \text{if } s = \text{New Jersey}
+\end{array}\end{cases}
+$$
+
+--
+
+__Post-treatment periods dummy variable__
+$$
+POST_t = \begin{cases}\begin{array}{lcl}
+0 \quad \text{if } t < \text{April 1, 1992} \\\
+1 \quad \text{if } t \geq \text{April 1, 1992}
+\end{array}\end{cases}
+$$
+
+--
+
+__Which observations correspond to $TREAT_s \times POST_t = 1$?__
+
+--
+
+* Let's put all these ingredients together:
+$$EMP_{st} = \alpha + \beta TREAT_s + \gamma POST_t + \delta(TREAT_s \times POST_t) + \varepsilon_{st}$$
+
+* $\delta$: causal effect of the minimum wage increase on employment
+
+---
+
+# Understanding the Regression
+
+$$EMP_{st} = \color{#d96502}\alpha + \color{#027D83}\beta TREAT_s + \color{#02AB0D}\gamma POST_t + \color{#d90502}\delta(TREAT_s \times POST_t) + \varepsilon_{st}$$
+
+--
+
+We have the following:
+
+--
+
+$\mathbb{E}(EMP_{st} \; | \; TREAT_s = 0, POST_t = 0) = \color{#d96502}\alpha$
+
+--
+
+$\mathbb{E}(EMP_{st} \; | \; TREAT_s = 0, POST_t = 1) = \color{#d96502}\alpha + \color{#02AB0D}\gamma$
+
+--
+
+$\mathbb{E}(EMP_{st} \; | \; TREAT_s = 1, POST_t = 0) = \color{#d96502}\alpha + \color{#027D83}\beta$
+
+--
+
+$\mathbb{E}(EMP_{st} \; | \; TREAT_s = 1, POST_t = 1) = \color{#d96502}\alpha + \color{#027D83}\beta + \color{#02AB0D}\gamma + \color{#d90502}\delta$
+
+--
+
+$$[\mathbb{E}(EMP_{st} \; | \; TREAT_s = 1, POST_t = 1)-\mathbb{E}(EMP_{st} \; | \; TREAT_s = 1, POST_t = 0)] - \\
+[\mathbb{E}(EMP_{st} \; | \; TREAT_s = 0, POST_t = 1)-\mathbb{E}(EMP_{st} \; | \; TREAT_s = 0, POST_t = 0)] = \color{#d90502}\delta$$
+
+---
+
+# Understanding the Regression
+
+$$EMP_{st} = \color{#d96502}\alpha + \color{#027D83}\beta TREAT_s + \color{#02AB0D}\gamma POST_t + \color{#d90502}\delta(TREAT_s \times POST_t) + \varepsilon_{st}$$
+
+In table form:
+
+
+   | Pre mean | Post mean | $\Delta$(post - pre)
+:-:|:--:|:--:|:--:
+Pennsylvania (PA) | $\color{#d96502}\alpha$ | $\color{#d96502}\alpha + \color{#02AB0D}\gamma$ | $\color{#02AB0D}\gamma$
+New Jersey (NJ) | $\color{#d96502}\alpha + \color{#027D83}\beta$ | $\color{#d96502}\alpha + \color{#027D83}\beta + \color{#02AB0D}\gamma + \color{#d90502}\delta$ | $\color{#02AB0D}\gamma + \color{#d90502}\delta$
+$\Delta$(NJ - PA) | $\color{#027D83}\beta$ | $\color{#027D83}\beta + \color{#d90502}\delta$ | $\color{#d90502}\delta$
+
+--
+
+This table generalizes to other settings by substituting *Pennsylvania* with *Control* and *New Jersey* with *Treatment*
+---
+
+class: inverse
+
+# Task 2 (10 minutes)
+
+1. Create a dummy variable, `treat`, equal to `FALSE` if `state` is Pennsylvania and `TRUE` if New Jersey.
+
+1. Create a dummy variable, `post`, equal to `FALSE` if `observation` is February 1992 and `TRUE` otherwise.
+
+1. Estimate the following regression model. Do you obtain the same results as in slide 9?
+
+$$empfte_{st} = \alpha + \beta treat_s + \gamma post_t + \delta(treat_s \times post_t) + \varepsilon_{st}$$
+
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Identifying Assumptions
+
+---
+
+layout: true
+
+<div class="my-footer"><img src="../img/logo/ScPo-shield.png" style="height: 60px;"/></div> 
+
+---
+
+# DiD Crucial Assumption: Parallel Trends
+
+> __Common or parallel trends assumption__: absent any minimum wage increase, Pennsylvania's fast-food employment trend would have been what we should have expected to see in New Jersey.
+
+--
+
+* This assumption states that Pennsylvania's fast-food employment trend between February and November 1992 provides a reliable counterfactual employment trend New Jersey's fast-food industry *would have experienced* had New Jersey not increased its minimum wage.
+
+--
+
+* Impossible to completely validate or invalidate this assumption.
+
+* *Intuitive check:* compare trends before policy change (and after policy change if no expected medium-term effects)
+
+---
+
+#  Parallel Trends: Graphically
+
+```{r, echo = FALSE, eval = TRUE, fig.width = 10, fig.height = 5}
+gg_did2
+```
+
+---
+
+# Checking the parallel trends assumption
+
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_trend <- ggplot(ck_mw, aes(x = date, y = fte_emp, color = state)) +
+  geom_point(size = 3) +
+  geom_line() +
+  geom_vline(xintercept = as.Date("010492", format = "%d%m%y"), linetype = "longdash") +
+  geom_vline(xintercept = as.Date("010292", format = "%d%m%y"), linetype = "solid") +
+  geom_vline(xintercept = as.Date("011192", format = "%d%m%y"), linetype = "solid") +
+  ylim(17,24) +
+  scale_x_date(labels = date_format("%h %y"),
+               limits = c(as.Date("011091", format = "%d%m%y"),as.Date("011292", format = "%d%m%y")),
+               date_breaks = "1 month",
+               minor_breaks = NULL) +
+  labs(x = NULL, y = "Average number of FTE employees per store", color = NULL) +
+  scale_colour_viridis_d() +
+  theme_bw(base_size = 16) + theme(legend.position="none") +
+  annotate("label", x = as.Date("1992-06-25"), y = 23.99, label = "New Jersey minimum wage increases", color = "black", size = 4.5) +
+  annotate("label", x = as.Date("1991-12-28"), y = 23.99, label = "Survey before", color = "black", size = 4.5) +
+  annotate("label", x = as.Date("1992-11-23"), y = 23.99, label = "Survey after", color = "black", size = 4.5)
+
+gg_did_trend +
+  annotate("label", x = as.Date("1991-11-17"), y = 21.5, label = "What happened here?", color = "black", size = 6)
+```
+
+---
+
+# Checking the parallel trends assumption
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_trend +
+  # PA
+  geom_segment(aes(x = as.Date("011091", format = "%d%m%y"), y = 24, xend = as.Date("010292", format = "%d%m%y"), yend = ck_mw[1,"fte_emp"]), color = "#FDE725FF", linetype = "dashed") +
+  geom_segment(aes(x = as.Date("011091", format = "%d%m%y"), y = 22, xend = as.Date("010292", format = "%d%m%y"), yend = ck_mw[1,"fte_emp"]), color = "#FDE725FF", linetype = "dashed") +
+  geom_segment(aes(x = as.Date("011091", format = "%d%m%y"), y = 20, xend = as.Date("010292", format = "%d%m%y"), yend = ck_mw[1,"fte_emp"]), color = "#FDE725FF", linetype = "dashed") +
+  # NJ
+  geom_segment(aes(x = as.Date("011091", format = "%d%m%y"), y = 20, xend = as.Date("010292", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]), color = "#440154FF", linetype = "dashed") +
+  geom_segment(aes(x = as.Date("011091", format = "%d%m%y"), y = 19, xend = as.Date("010292", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]), color = "#440154FF", linetype = "dashed") +
+  geom_segment(aes(x = as.Date("011091", format = "%d%m%y"), y = 18, xend = as.Date("010292", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]), color = "#440154FF", linetype = "dashed")
+```
+
+---
+
+# Parallel trends assumption $\rightarrow$ Verified `r emo::ji("white_check_mark")`
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_trend_val <- gg_did_trend +
+  # PA
+  geom_segment(aes(x = as.Date("011091", format = "%d%m%y"), y = ck_mw[1,"fte_emp"] + 0.3, xend = as.Date("010292", format = "%d%m%y"), yend = ck_mw[1,"fte_emp"]), color = "#FDE725FF", linetype = "dashed") +
+  # NJ
+  geom_segment(aes(x = as.Date("011091", format = "%d%m%y"), y = ck_mw[2,"fte_emp"] + 0.3, xend = as.Date("010292", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]), color = "#440154FF", linetype = "dashed")
+gg_did_trend_val
+```
+
+---
+
+# Parallel trends assumption $\rightarrow$ Verified `r emo::ji("white_check_mark")`
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_trend_val +
+  annotate("rect", xmin=as.Date("011091", format = "%d%m%y"), xmax=as.Date("010292", format = "%d%m%y"), ymin=20 , ymax=24, alpha=0.4, color="#21908CFF", fill="#21908CFF") +
+  annotate("text", x=as.Date("011291", format = "%d%m%y"), y=22, label = "Employment trends\nare similar", color = "black", size = 5)
+```
+
+---
+
+# Parallel trends assumption $\rightarrow$ Not verified `r emo::ji("x")`
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_trend_notval <- gg_did_trend +
+  # PA
+  geom_segment(aes(x = as.Date("011091", format = "%d%m%y"), y = ck_mw[1,"fte_emp"] + 0.5, xend = as.Date("010292", format = "%d%m%y"), yend = ck_mw[1,"fte_emp"]), color = "#FDE725FF", linetype = "dashed") +
+  # NJ
+  geom_segment(aes(x = as.Date("011091", format = "%d%m%y"), y = ck_mw[2,"fte_emp"] - 0.6, xend = as.Date("010292", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]), color = "#440154FF", linetype = "dashed")
+gg_did_trend_notval
+```
+
+---
+
+# Parallel trends assumption $\rightarrow$ Not verified `r emo::ji("x")`
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_trend_notval + 
+  annotate("rect", xmin=as.Date("011091", format = "%d%m%y"), xmax=as.Date("010292", format = "%d%m%y"), ymin=19.5 , ymax=24, alpha=0.4, color="#21908CFF", fill="#21908CFF") +
+  annotate("text", x=as.Date("011291", format = "%d%m%y"), y=22, label = "Employment trends\nare not similar", color = "black", size = 5)
+```
+
+---
+
+# Parallel trends assumption $\rightarrow$ Not verified `r emo::ji("x")`
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_trend_notval + 
+  geom_segment(aes(x = as.Date("010292", format = "%d%m%y"), y = ck_mw[2,"fte_emp"], xend = as.Date("011192", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"] + 1.35), color = "#440154FF", linetype = "dashed")
+```
+
+---
+
+# Parallel trends assumption $\rightarrow$ Not verified `r emo::ji("x")`
+
+```{r, echo = F, fig.width = 10, fig.height = 5}
+gg_did_trend_notval + 
+  geom_segment(aes(x = as.Date("010292", format = "%d%m%y"), y = ck_mw[2,"fte_emp"], xend = as.Date("011192", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"] + 1.35), color = "#440154FF", linetype = "dashed") +
+  geom_segment(aes(x = as.Date("010292", format = "%d%m%y"), y = ck_mw[2,"fte_emp"], xend = as.Date("011192", format = "%d%m%y"), yend = ck_mw[2,"fte_emp"]-(ck_mw[1,"fte_emp"]-ck_mw[3,"fte_emp"])),
+               color = "#FDE725FF", linetype = "dashed") +
+  annotate("label", x = as.Date("1992-05-20"), y = 18.9, label = "New Jersey counterfactual", color = viridis_pal()(2)[2], size = 5) +
+  annotate("text", x = as.Date("1992-11-28"), y = 19.45, label = "DiD\nTreatment\nEffect", color = "black", size = 5) +
+  annotate("text", x = as.Date("1992-11-28"), y = 21.6, label = "Real\nTreatment\nEffect", color = "black", size = 5)
+x = 640
+ymin = 117
+ymax = ymin+32
+grid.brackets(x,
+              ymin,
+              x,
+              ymax,
+              h = 0.05, lwd=1, col="black")
+x = 640
+ymin = 150
+ymax = ymin+114
+grid.brackets(x,
+              ymin,
+              x,
+              ymax,
+              h = 0.05, lwd=1, col="black")
+```
+
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Regression Discontinuity Design
+
+---
+
+layout: true
+
+<div class="my-footer"><img src="../img/logo/ScPo-shield.png" style="height: 60px;"/></div> 
+
+---
+
+# Regression Discontinuity Design (RDD)
+
+* Very common research design in applied research because it provides credible causal estimates.
+
+--
+
+* Starting point: subjects are ***not*** randomly allocated to treatment `r emo::ji("warning")`
+
+--
+
+* RDD can be applied when we have specific information about the rules determining treatment.
+
+--
+
+* __RDD__ exploits this precise information about allocation to treatment!
+
+---
+
+# Discontinuities are Everywhere
+
+There are many arbitrary rules in life that determine assignment to some treatment:
+  
+--
+  
+* In North Carolina, you used to have to have reached the age of five by October 16 in the relevant year to be eligible to enter kindergarten [(Cook and Kang, 2016)](https://pubs.aeaweb.org/doi/pdfplus/10.1257/app.20140323);
+  
+--
+  
+* In the US, a new born baby weighing less than 1,500 grams is considered to be of "very low birth weight" and receive additional treatment [(Almond et al., 2010)](https://academic.oup.com/qje/article/125/2/591/1882183);
+  
+--
+
+* Flagship state universities use a certain SAT cutoff level to select their students [(Hoekstra, 2009)](https://cdn.theatlantic.com/static/mt/assets/business/Hoekstra_Flagship.pdf);
+
+--
+
+* In Italy, there are quotas of residence permits for illegal immigrants that are allocated on a first-come first-served basis until quota is exhausted [(Pinotti, 2017)](https://pubs.aeaweb.org/doi/pdfplus/10.1257/aer.20150355);
+
+--
+
+We will focus our analysis on the following discontinuity:
+
+* In the US, the legal drinking age is 21 years old [(Carpenter and Dobkin, 2009)](http://masteringmetrics.com/wp-content/uploads/2015/01/Carpenter-and-Dobkin-2009.pdf).
+
+---
+
+# An Example: Alcohol Consumption and Mortality
+
+--
+
+* Imagine you are interested in assessing the __causal__ impact of alcohol consumption by young adults on mortality.
+
+--
+
+* Why is this not that straightforward? Why can't you just regress alcohol consumption on dying age and cause of death?
+
+--
+
+  * Because there may be unobserved selection into alcohol consumption that may also be a determinant of mortality.
+  
+--
+
+* In the US, alcohol consumption is prohibited before the age of 21.
+
+--
+
+* Debate on whether the minimum legal drinking age (MLDA) should be lowered to 18, as was the case in the Vietnam-era.
+
+---
+
+# Key Terms and Intuition
+
+> ***Running variable:*** variable that determines assignment to treatment.
+
+--
+
+$\rightarrow$ $a$ = age
+
+--
+
+> ***Cutoff level:*** level of the ***running variable*** above (or below) which individuals are treated (or not).
+
+--
+
+$\rightarrow$ $c = 21$ year old birthday
+
+--
+
+Causal intuition:
+
+* How different are individuals *just before* and *just after* their 21st birthday, other than legal access to alcohol?
+
+--
+
+* Around the threshold, allocation to treatment is ***as good as random***.
+
+--
+
+* `r emo::ji("point_right")` ***Regression discontinuity design*** exploits this allocation to treatment!
+
+---
+
+# Carpenter and Dobkin's data
+
+* Let's take a closer at the data used in the paper
+
+.pull-left[
+```{r, echo = TRUE, eval = TRUE}
+# install package containing data
+devtools::install_github("jrnold/masteringmetrics",
+                         subdir = "masteringmetrics")
+
+# load package
+library(masteringmetrics)
+# load data
+data("mlda", package = "masteringmetrics")
+```
+]
+
+--
+
+.pull-right[
+```{r, echo = FALSE}
+mlda %>%
+  select(agecell, all, internal, external,
+         alcohol, homicide, suicide) %>%
+  head()
+```
+]
+
+--
+
+* This dataset contains aggregate death rates (and their causes) for different age groups (`agecell`) between 19 and 23 years old.
+
+---
+
+# Sharp Discontinuity at Cutoff
+
+```{r, echo = FALSE, eval = TRUE, fig.height = 4.75, fig.width = 10}
+mlda <- mlda %>%
+  mutate(over21 = (agecell >= 21))
+
+rdd_run <- mlda %>%
+  ggplot(aes(x = agecell, y = over21, color = over21)) +
+  geom_point(size = 4, alpha = 0.8) +
+  geom_vline(xintercept = 21, linetype = "longdash") +
+  labs(x = "Age", y = "Above LMDA") +
+  scale_color_viridis_d() +
+  theme_bw(base_size = 14) + theme(legend.position="none")
+rdd_run
+```
+
+At the threshold, the probability of being treated jumps from 0 to 1.
+
+---
+
+# Sharp Discontinuity at Cutoff
+
+```{r, echo = FALSE, eval = TRUE, fig.height = 4.75, fig.width = 10}
+rdd_run +
+  annotate("rect", xmin = 20.5, xmax = 21.5, ymin = -Inf, ymax = Inf, alpha = .2) +
+  annotate("rect", xmin = 21 - 1/12, xmax = 21 + 1/12, ymin = -Inf, ymax = Inf, alpha = .4) +
+  geom_point(size = 4, alpha = 0.8) +
+  geom_vline(xintercept = 21, linetype = "longdash")
+```
+
+---
+
+# Sharp Discontinuity at Cutoff
+
+```{r, echo = FALSE, eval = TRUE, fig.height = 4.75, fig.width = 10}
+rdd_run +
+  annotate("rect", xmin = 20.5, xmax = 21.5, ymin = -Inf, ymax = Inf, alpha = .2) +
+  annotate("rect", xmin = 21 - 1/12, xmax = 21 + 1/12, ymin = -Inf, ymax = Inf, alpha = .4) +
+  geom_point(size = 4, alpha = 0.8) +
+  geom_vline(xintercept = 21, linetype = "longdash") +
+  scale_x_continuous(breaks = c(21 - 6/12, 21 - 3/12, 21, 21 + 3/12, 21 + 6/12),
+                     labels = c("- 6 months", "- 3 months", "21", "+ 3 months", "+ 6 months"),
+                     minor_breaks = seq(from = 21 - 7/12, to = 21 + 7/12, by = 1/12),
+                     lim = c(21 - 7/12, 21 + 7/12))
+```
+
+---
+
+# RDD Framework
+
+* ***Treatment variable***: $D_a$
+
+--
+
+  - $D_a$ = 1 if individual is over 21 years old, $D_a$ = 0 if not.
+
+--
+
+  - $D_a$ is a function of the individual's age, $a$, which is the ***running variable***.
+  
+--
+
+* The ***cutoff*** age, 21, separates those who can drink legally and those who can't:
+  $$
+  D_a = \begin{cases}\begin{array}{lcl}
+  1 \quad \text{if } a \geq 21 \\\
+  0 \quad \text{if } a < 21
+  \end{array}\end{cases}
+  $$
+  
+## Key features of RD designs
+
+1. Treatment status is a __deterministic__ function of $a$ $\rightarrow$ we know the assignment rule
+
+--
+
+1. Treatment status is a __discontinuous__ function of $a$ $\rightarrow$ there is some cutoff level
+
+---
+
+# Graphical Results: All Death Rates
+
+```{r, echo = FALSE, eval = TRUE, fig.height = 5, fig.width = 10}
+rdd_plot <- mlda %>%
+  ggplot(aes(x = agecell, y = all, color = over21)) +
+  geom_point(size = 4) +
+  geom_vline(xintercept = 21, linetype = "longdash") +
+  labs(x = "Age",
+       y = "Death rate from all causes (per 100,000)",
+       color = NULL) +
+  scale_colour_viridis_d(aesthetics = c("colour", "fill"), labels = c("FALSE" = "Control", "TRUE" = "Treatment")) +
+  theme_bw(base_size = 14) +
+  theme(legend.position="none")
+rdd_plot
+```
+
+---
+
+# Graphical Results: All Death Rates
+
+```{r, echo = FALSE, eval = TRUE, fig.height = 5, fig.width = 10}
+library(broom)
+all_fit <- augment(lm(all ~ agecell + over21, mlda))
+
+rdd_plot_line <- rdd_plot +
+  geom_line(data = all_fit %>% filter(agecell < 21), aes(x = agecell, y = .fitted), color = viridis_pal()(2)[1], size = 2) +
+  geom_line(data = all_fit %>% filter(agecell >= 21), aes(x = agecell, y = .fitted), color = viridis_pal()(2)[2], size = 2) +
+labs(fill = NULL)
+rdd_plot_line
+```
+
+---
+
+# Graphical Results: All Death Rates
+
+```{r, echo = FALSE, eval = TRUE, fig.height = 5, fig.width = 10}
+bracketsGrob <- function(...){
+l <- list(...)
+e <- new.env()
+e$l <- l
+  grid:::recordGrob(  {
+    do.call(grid.brackets, l)
+  }, e)
+}
+
+b1 <- bracketsGrob(21, all_fit$.fitted[all_fit$agecell < 21 & all_fit$agecell > 20.9], 21, all_fit$.fitted[all_fit$agecell > 21 & all_fit$agecell <= 21.1],
+                   h = 0.75, lwd=1.5, col="black")
+
+rdd_plot_line_brack <- rdd_plot_line +
+  annotation_custom(b1,xmin= 0, xmax=1, ymin=0, ymax=1) +
+  annotate("text", x = 20.65, y = 96, label = "Treatment\nEffect", colour = "black", size = 5)
+rdd_plot_line_brack
+```
+
+---
+
+# Graphical Results: All Death Rates
+
+```{r, echo = FALSE, eval = TRUE, fig.height = 5, fig.width = 10}
+bracketsGrob <- function(...){
+l <- list(...)
+e <- new.env()
+e$l <- l
+  grid:::recordGrob(  {
+    do.call(grid.brackets, l)
+  }, e)
+}
+
+all_fit_2 <- augment(lm(all ~ agecell + over21, mlda %>% filter(agecell >= 20.4 & agecell <= 21.6)))
+
+b1 <- bracketsGrob(21, all_fit_2$.fitted[all_fit_2$agecell < 21 & all_fit_2$agecell > 20.9], 21, all_fit_2$.fitted[all_fit_2$agecell > 21 & all_fit_2$agecell <= 21.1],
+                   h = 0.75, lwd=1.5, col="black")
+
+rdd_plot +
+  geom_line(data = all_fit_2 %>% filter(agecell < 21), aes(x = agecell, y = .fitted), color = viridis_pal()(2)[1], size = 2) +
+  geom_line(data = all_fit_2 %>% filter(agecell >= 21), aes(x = agecell, y = .fitted), color = viridis_pal()(2)[2], size = 2) +
+  labs(fill = NULL) +
+  annotation_custom(b1,xmin= 0, xmax=1, ymin=0, ymax=1) +
+  annotate("text", x = 20.9, y = 97.2, label = "Treatment\nEffect", colour = "black", size = 5) +
+  scale_x_continuous(breaks = c(21 - 6/12, 21 - 3/12, 21, 21 + 3/12, 21 + 6/12),
+                     labels = c("- 6 months", "- 3 months", "21", "+ 3 montsh", "+ 6 months"),
+                     minor_breaks = seq(from = 21 - 7/12, to = 21 + 7/12, by = 1/12),
+                     lim = c(21 - 7/12, 21 + 7/12))
+```
+
+---
+
+# RDD as Local Average Treatment Effect (LATE)
+
+* The RD estimator is a __local average treatment effect (LATE)__.
+
+--
+
+* It only tells you the impact of treatment $D$ on outcome $Y$ ***around*** the cutoff value of the running variable.
+
+--
+
+* Limited ***external validity*** $\rightarrow$ you cannot extrapolate to the entire population.
+
+--
+
+* Using the 21 year old alcohol restriction age in the RD context will only tell you the effect of this restriction on death rates but not the general effect of alcohol consumption.
+
+--
+
+* One may easily argue that all results from quantitative empirical analyses have a local nature.
+
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Estimation
+
+---
+
+layout: true
+
+<div class="my-footer"><img src="../img/logo/ScPo-shield.png" style="height: 60px;"/></div> 
+
+---
+
+# Estimation
+
+* *Objective:* measure ***gap*** between the two lines at the cutoff.
+
+--
+
+* In its simplest form, we can write the following regression model:
+    $$DEATHRATE_a = \alpha + \delta D_a + \beta a + \varepsilon_i,$$
+  where $DEATHRATE_a$ is the death rate at age $a$, $D_a$ is the treatment dummy, and $a$ is age (defined in months relative to 21st birthday).
+
+--
+
+  $\rightarrow$ $\delta$ captures the **jump in death rate** between individuals above and below 21 years old.
+
+--
+
+* The RDD estimator exploits a discontinuity at $a = 21$ in the conditional expectation function:
+$$\underbrace{\lim_{c \to 21^+} \mathbb{E}[DEATHRATE_a|a = c]}_{\alpha + \delta} - \underbrace{\lim_{c \to 21^-} \mathbb{E}[DEATHRATE_a|a = c]}_{\alpha} = \delta$$
+
+---
+
+class: inverse
+
+# Task 2 (5 minutes)
+
+1. Estimate the following model on all death causes.
+$$DEATHRATE_a = \alpha + \delta D_a + \beta a + \varepsilon_i,$$
+
+ Does the RDD coefficient correspond to the graphical illustration?
+ 
+1. How do you interpret each coefficient?
+
+1. What is the causal effect of legal access to alcohol on death rates?
+
+---
+
+# Estimation #1: Simple Linear Model
+
+$$DEATHRATE_a = \alpha + \delta D_a + \beta a + \varepsilon_a,$$
+
+.pull-left[
+```{r, eval = FALSE}
+mlda <- mlda %>%
+  mutate(over21 = (agecell >= 21),
+         agecell_21 = agecell - 21)
+rdd <- lm(all ~ agecell_21 + over21, mlda)
+
+library(broom)
+tidy(rdd)
+```
+]
+
+.pull-right[
+```{r, echo = FALSE}
+mlda <- mlda %>%
+  mutate(over21 = (agecell >= 21),
+         agecell_21 = agecell - 21)
+rdd <- lm(all ~ agecell_21 + over21, mlda)
+
+library(broom)
+tidy(rdd)
+```
+]
+
+--
+
+<br>
+
+***Interpretation:***
+
+--
+
+On average, the MLDA increases death rates from all causes by 7.66 percentage points.
+
+--
+
+This is a big effect considering the average death rate for individuals between 19 and 22 is:
+
+```{r}
+mean(mlda$all, na.rm = TRUE)
+```
+
+
+---
+
+# Estimation Issues
+
+* The ***functional form*** used to approximate the lines really matters!
+
+--
+
+   $\rightarrow$ an insufficiently flexible specification runs the risk of mistaking nonlinearity for treatment effect;
+
+--
+   
+   $\rightarrow$ an overly flexible specification reduces precision and runs the risk of overfitting.
+
+
+---
+
+# Simulations - Linear Relationship and Clear Discontinuity
+
+```{r, echo = FALSE, fig.height = 4.5, fig.width = 10}
+set.seed(1234)
+
+  # parameters
+cutoff = 0.5
+alpha = 0.2 # intercept
+delta = 0.4 # jump at cutoff
+beta = 2 # slope
+nsim = 150 # number of simulated observations
+
+  # running variable
+x = runif(n = nsim,
+          min = 0,
+          max = 1)
+
+  # treatment variable
+D = if_else(x > cutoff, TRUE, FALSE)
+
+  # error term
+u = rnorm(n = nsim, mean = 0, sd = .1)
+
+  # outcome variable
+Y = alpha + beta * x + D*delta + u
+
+  # create tibble
+rdd_sim = tibble(running = x,
+                 treatment_dum = D,
+                 outcome = Y)
+  
+  # plot
+rdd_lin <- ggplot(rdd_sim,
+       aes(x = running, y = outcome, color = treatment_dum)) +
+  geom_point(size = 3, alpha = 0.75) +
+  stat_smooth(method = "lm", se = FALSE) +
+  ylim(0,3) +
+  labs(x = "Running variable",
+       y = "Outcome variable",
+       colour = NULL) +
+  scale_colour_viridis_d(breaks=c("FALSE", "TRUE"), labels = c("Not Treated", "Treated")) +
+  theme_bw(base_size = 14) + theme(legend.position="top")
+rdd_lin
+```
+
+--
+
+$$outcome_i = \alpha + \delta treatment_i + \beta running_i + e_i,$$
+
+---
+
+# Simulations - Linear Relationship and Clear Discontinuity
+
+```{r, echo = FALSE, fig.height = 4.5, fig.width = 10}
+bracketsGrob <- function(...){
+l <- list(...)
+e <- new.env()
+e$l <- l
+  grid:::recordGrob(  {
+    do.call(grid.brackets, l)
+  }, e)
+}
+
+b1 <- bracketsGrob(0.50, 1.20, 0.50, 1.63, h = 0.2, lwd=1.5, col="black")
+
+rdd_lin +
+  annotation_custom(b1,xmin= 0, xmax=1, ymin=0, ymax=1) +
+  annotate("text", x = 0.46, y = 1.45, label = "delta", colour = "#d90502", parse = T, size = 8)
+```
+
+$$outcome_i = \alpha + \color{#d90502}\delta treatment_i + \beta running_i + e_i,$$
+
+---
+
+# Simulations - Quadratic Relationship and Clear Discontinuity
+
+```{r, echo = FALSE, fig.height = 4.5, fig.width = 10}
+set.seed(1234)
+
+  # parameters
+cutoff = 0.5
+alpha = 1.5 # intercept
+delta = 0.4 # jump at cutoff
+beta = -8 # slope
+beta_2 = 25
+beta_3 = -17
+nsim = 150 # number of simulated observations
+
+  # running variable
+x = runif(n = nsim,
+          min = 0,
+          max = 1)
+
+  # treatment variable
+D = if_else(x > cutoff, TRUE, FALSE)
+
+  # error term
+u = rnorm(n = nsim, mean = 0, sd = .1)
+
+  # outcome variable
+Y = alpha + beta * x + beta_2 * x^2 + beta_3 * x^3 + D*delta + u
+
+  # create tibble
+rdd_sim = tibble(running = x,
+                 treatment_dum = D,
+                 outcome = Y)
+
+  # plot
+rdd_quad <- ggplot(rdd_sim,
+       aes(x = running, y = outcome, color = treatment_dum)) +
+  geom_point(size = 3, alpha = 0.75) +
+  stat_smooth(method = "lm",
+              formula = y ~ x + I(x^2),
+              se = FALSE) +
+  geom_vline(xintercept = 0.5, linetype = "longdash") +
+  ylim(0,3) +
+  labs(x = "Running variable", y = "Outcome variable", colour = "") +
+  scale_colour_viridis_d(breaks=c("FALSE", "TRUE"), labels = c("Not Treated", "Treated")) +
+  theme_bw(base_size = 14) + theme(legend.position="top")
+rdd_quad
+```
+
+--
+
+$$outcome_i = \alpha + \delta treatment_i + \beta_1 running_i + \color{#d90502}{\beta_2 running_i^2} + e_i,$$
+
+---
+
+# Simulations - Quadratic Relationship and Clear Discontinuity
+
+```{r, echo = FALSE, fig.height = 4.5, , fig.width = 10}
+bracketsGrob <- function(...){
+l <- list(...)
+e <- new.env()
+e$l <- l
+  grid:::recordGrob(  {
+    do.call(grid.brackets, l)
+  }, e)
+}
+
+b1 <- bracketsGrob(0.50, 1.68, 0.50, 2.05, h = 0.2, lwd=1.5, col="black")
+
+rdd_quad +
+  annotation_custom(b1,xmin= 0, xmax=1, ymin=0, ymax=1) +
+  annotate("text", x = 0.46, y = 1.865, label = "delta", colour = "#d90502", parse = T, size = 8)
+```
+
+$$outcome_i = \alpha + \color{#d90502}\delta treatment_i + \beta_1 running_i + \beta_2 running_i^2 + e_i,$$
+
+---
+
+# Simulations - Linear Relationship but NO Discontinuity
+
+```{r, echo = FALSE, fig.height = 4.5, fig.width = 10}
+set.seed(123)
+
+  # parameters
+cutoff = 0.5
+alpha = 2.5 # intercept
+beta_1 = 2.5 # slope
+beta_2 = 0.5 # slope 2
+power = 7
+nsim = 150 # number of simulated observations
+
+  # running variable
+x = runif(n = nsim,
+          min = 0,
+          max = 1)
+
+  # treatment variable
+D = if_else(x > cutoff, TRUE, FALSE)
+
+  # error term
+u = rnorm(n = nsim, mean = 0, sd = .1)
+
+  # outcome variable
+Y = alpha + (1 - alpha) / (1 + (x/beta_2)^power) + u
+
+  # without error term
+Y_true = alpha + (1 - alpha) / (1 + (x/beta_2)^power)
+
+  # create tibble
+rdd_sim = tibble(running = x,
+                 treatment_dum = D,
+                 outcome = Y,
+                 true = Y_true)
+
+  # plot
+rdd_nodisc <- ggplot(rdd_sim,
+       aes(x = running, y = outcome, color = treatment_dum)) +
+  geom_point(size = 3, alpha = 0.75) +
+  geom_line(aes(x = running, y = true), colour = "black", linetype = "dotted") +
+  stat_smooth(method = "lm",
+              formula = y ~ x,
+              se = FALSE) +
+  geom_vline(xintercept = 0.5, linetype = "longdash") +
+  ylim(0,3) +
+  labs(x = "Running variable", y = "Outcome variable", colour = "") +
+  scale_colour_viridis_d(breaks=c("FALSE", "TRUE"), labels = c("Not Treated", "Treated")) +
+  theme_bw(base_size = 14) + theme(legend.position="top")
+rdd_nodisc
+```
+
+---
+
+# Simulations - Different Slopes
+
+```{r, echo = FALSE, fig.height = 4.5, fig.width = 10}
+set.seed(1234)
+
+  # parameters
+cutoff = 0.5
+alpha = 1 # intercept
+delta = 0.4 # jump at cutoff
+beta = -1 # slope
+gamma = 4
+nsim = 150 # number of simulated observations
+
+  # running variable
+x = runif(n = nsim,
+          min = 0,
+          max = 1)
+
+  # treatment variable
+D = if_else(x > cutoff, TRUE, FALSE)
+
+  # error term
+u = rnorm(n = nsim, mean = 0, sd = .1)
+
+  # outcome variable
+Y = alpha + beta * (x - cutoff) + D*delta + gamma * D * (x - cutoff) + u
+
+  # create tibble
+rdd_sim = tibble(running = x,
+                 treatment_dum = D,
+                 outcome = Y)
+
+  # plot
+rdd_diffslope <- ggplot(rdd_sim,
+       aes(x = running, y = outcome, color = treatment_dum)) +
+  geom_point(size = 3, alpha = 0.75) +
+  stat_smooth(method = "lm",
+              formula = y ~ x,
+              se = FALSE) +
+  geom_vline(xintercept = 0.5, linetype = "longdash") +
+  ylim(0,3) +
+  labs(x = "Running variable", y = "Outcome variable", colour = "") +
+  scale_colour_viridis_d(breaks=c("FALSE", "TRUE"), labels = c("Not Treated", "Treated")) +
+  theme_bw(base_size = 14) + theme(legend.position="top")
+rdd_diffslope
+```
+
+--
+
+$$outcome_i = \alpha + \delta treatment_i + \beta (running_i - cutoff) + \\ \color{#d90502}{\gamma treatment_i * (running_i - cutoff)} + e_i,$$
+
+---
+
+# Simulations - Different (Linear) Slopes
+
+```{r, echo = FALSE, fig.height = 4.5, fig.width = 10}
+bracketsGrob <- function(...){
+l <- list(...)
+e <- new.env()
+e$l <- l
+  grid:::recordGrob(  {
+    do.call(grid.brackets, l)
+  }, e)
+}
+
+b1 <- bracketsGrob(0.50, 0.99, 0.50, 1.46, h = 0.2, lwd=1.5, col="black")
+
+rdd_diffslope +
+  annotation_custom(b1,xmin= 0, xmax=1, ymin=0, ymax=1) +
+  annotate("text", x = 0.46, y = 1.225, label = "delta", colour = "#d90502", parse = T, size = 8)
+```
+
+$$outcome_i = \alpha + \color{#d90502}\delta treatment_i + \beta (running_i - cutoff) + \\ \gamma treatment_i * (running_i - cutoff) + e_i,$$
+
+---
+
+# How to Choose Appropriate Functional Form?
+
+* Essential to __visualise__ the data!
+
+--
+
+* Coefficients across models shouldn't vary too much.
+
+--
+
+* Should we expect the relationship between the outcome variable and the running variable to be nonlinear? Should we expect it to differ around the cutoff?
+
+--
+
+* [Gelman and Imbens (2019)](https://www.tandfonline.com/doi/abs/10.1080/07350015.2017.1366909), "Why High-Order Polynomials Should Not Be Used in Regression Discontinuity Designs":  
+  *"We recommend researchers [...] use estimators based on local linear or quadratic polynomials or other smooth functions."*
+
+---
+
+class: inverse
+
+# Task 3 (10 minutes)
+
+1. Estimate the following *quadratic* model on all death causes. Does the RDD coefficient differ from the linear model? 
+$$DEATHRATE_a = \alpha + \delta D_a + \beta a + \beta a^2 + \varepsilon_a,$$
+
+1. Recall that the regression model allowing for different slopes on each side of the cutoff is:
+$$DEATHRATE_a = \alpha + \delta D_a + \beta (a - 21) + \gamma D_a * (a - 21) + \varepsilon_a,$$
+   - Why do we need to substract the $21$ from `a`? (Hint: compute $\mathbb{E}(DEATHRATE_a|a=21)$)
+   - Should we expect the relationship between death rates and age to change at 21?
+   - Estimate this model. How different is the RDD coefficient from the other models you have estimated?
+
+---
+
+# Graphical Representation of the Regression Results
+
+```{r, echo = FALSE, eval = TRUE, fig.height = 5, fig.width = 10}
+mlda_long <- mlda %>%
+    select(-contains("fitted")) %>%        # drop "fitted" variables
+    pivot_longer(cols = -c(agecell,over21),          # column to not reshape
+                 names_to = "death_cause", # new variable containing death causes
+                 values_to = "death_rate") %>% # new variable containing death rates by cause
+  filter(death_cause %in% c("all","mva","internal"))
+
+rdd_plot <- mlda_long %>%
+  ggplot(aes(x = agecell, y = death_rate, color = over21)) + geom_point() +
+    geom_smooth(mapping = aes(group = over21), se = FALSE, method = "lm",
+              formula = y ~ x) +
+  geom_vline(xintercept = 21, linetype = "longdash") +
+  labs(x = "Age", y = "Death rate (per 100,000)") +
+  scale_colour_viridis_d() +
+  theme_bw(base_size = 16) + theme(legend.position="none") +
+  facet_grid(rows = vars(death_cause), scales = "free_y")
+rdd_plot
+```
+
+---
+
+# Nonparametric Estimation
+
+* Give more weight to observations close to the cutoff level
+
+--
+
+2 settings:
+
+  * How much more weight?
+
+--
+  
+  $\rightarrow$ depends on the chosen ***kernel***.
+
+--
+
+  * How far away from the cutoff do observations need to be to be discarded?
+  
+--
+
+  $\rightarrow$ depends on the chosen ***bandwidth***.
+  
+--
+
+Luckily there's an `R` package that chooses these settings optimally based on fancy algorythms: `rdrobust`.
+
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Identifying Assumptions
+
+---
+
+layout: true
+
+<div class="my-footer"><img src="../img/logo/ScPo-shield.png" style="height: 60px;"/></div> 
+
+---
+
+# RDD Assumptions
+
+> *Key assumption*: ***Potential outcomes are smooth at the threshold.***
+
+--
+
+$\rightarrow$ assignment variable cannot be manipulated!
+
+--
+
+Formally:
+
+$$\lim_{r \to c+} E[Y_i^d|r] = \lim_{r \to c-} E[Y_i^d|r], d \in \{0,1\}$$
+
+--
+
+* The population just below must not be discretely different from the population just above the cutoff.
+
+--
+
+* Assumption is violated if people can manipulate the running variable because they know the cutoff value.
+
+--
+
+  * Knowing the cutoff value in itself does not violate the assumption, only ability to manipulate running variable does.
+
+---
+
+# Example of Manipulation: French Baccalaureate Grades
+
+```{r, echo = FALSE, out.width = "700px"}
+knitr::include_graphics("../img/photos/manipulation_rdd.png")
+```
+
+---
+
+# Noncompliance
+
+What if the running variable does not *fully* determine assignment to treatment?
+
+$\rightarrow$ ***Fuzzy RDD***
+
+* Even if all observations that satisfy the treatment condition are not treated, there is still a jump in the probability of being treated.
+
+* For you, just know that problem of imperfect determination of allocation to treatment can still be solved
+
+---
+
+# 5 Steps for Conducting RDD in Practice<sup>1</sup>
+
+.footnote[
+<sup>1</sup> Taken from [Andrew Heiss' wonderful course on RDD](https://evalsp20.classes.andrewheiss.com/class/11-class/).
+]
+
+### Step #1: ***Is assignment to treatment rule-based?***
+
+--
+
+### Step #2: ***Is design sharp or fuzzy?***
+
+--
+
+### Step #3: ***Is there a discontinuity in running variable at cutoff?***
+
+--
+
+### Step #4: ***Is there a discontinuity in outcome variable at cutoff in running variable?***
+
+--
+
+### Step #5: ***How big is the gap?***
+
+---
+class: title-slide-final, middle
+background-image: url(../img/logo/ScPo-econ.png)
+background-size: 250px
+background-position: 9% 19%
+
+# END
+
+
+
+
+|                                                                                                            |                                   |
+| :--------------------------------------------------------------------------------------------------------- | :-------------------------------- |
+| <a href="mailto:florian.oswald@sciencespo.fr">.ScPored[<i class="fa fa-paper-plane fa-fw"></i>]               | florian.oswald@sciencespo.fr       |
+| <a href="https://github.com/ScPoEcon/ScPoEconometrics-Slides">.ScPored[<i class="fa fa-link fa-fw"></i>] | Slides |
+| <a href="https://scpoecon.github.io/ScPoEconometrics">.ScPored[<i class="fa fa-link fa-fw"></i>] | Book |
+| <a href="http://twitter.com/ScPoEcon">.ScPored[<i class="fa fa-twitter fa-fw"></i>]                          | @ScPoEcon                         |
+| <a href="http://github.com/ScPoEcon">.ScPored[<i class="fa fa-github fa-fw"></i>]                          | @ScPoEcon                       |
+
