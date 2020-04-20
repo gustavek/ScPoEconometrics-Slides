@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>ScPoEconometrics</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Florian Oswald, Gustave Kenedi and Pierre Villedieu" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <script src="libs/kePrint/kePrint.js"></script>
+    <script src="https://use.fontawesome.com/5235085b15.js"></script>
+    <link rel="stylesheet" href="../css/scpo.css" type="text/css" />
+    <link rel="stylesheet" href="../css/scpo-fonts.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# ScPoEconometrics
+## Differences-in-Differences
+### Florian Oswald, Gustave Kenedi and Pierre Villedieu
+### SciencesPo Paris </br> 2020-04-20
+
+---
+
+
+layout: true
+
+&lt;div class="my-footer"&gt;&lt;img src="../img/logo/ScPo-shield.png" style="height: 60px;"/&gt;&lt;/div&gt; 
+
+---
+
+
+
+layout: true
+
+&lt;div class="my-footer"&gt;&lt;img src="../img/logo/ScPo-shield.png" style="height: 60px;"/&gt;&lt;/div&gt; 
+
+---
+
+# Recap from last week
+
+* Applied inference tools to regression analysis
+
+* *Standard error* of regression coefficients
+
+* *Statistical significance* of regression coefficients
+
+--
+
+## Today: Program Evaluation
+
+.pull-left[
+***Differences-in-differences***
+  * Exploits changes in policy over time
+
+  * Find the appropriate control group
+
+  * *Empircal application:* impact of the ***minimum wage*** on ***employment***
+]
+
+--
+
+.pull-right[
+***Regression Discontinuity Design***
+
+  * Life is full of random rules
+
+  * Exploits knowledge of assignment rule
+  
+  * *Empirical application:* effect of ***alchol consumption*** on ***mortality***
+]
+
+---
+
+# Evaluation methods
+
+* Multiple regression often does not provide causal estimates because of ***selection on unobservables***.
+
+--
+
+* RCTs are one way to solve this problem but they are often impossible to do.
+
+--
+
+* Four main causal evaluation methods used in economics:
+
+  - ***instrumental variables (IV)***,
+  - ***propensity-score matching***,
+  - ***differences-in-differences (DiD)***, and
+  - ***regression discontinuity designs (RDD)***.
+
+--
+
+* These methods are used to identify __causal relationships__ between treatments and outcomes.
+
+--
+
+* In this lecture, we will cover two popular and rigorous program evaluation methods:
+
+    1. __differences-in-differences__,
+    1. __regression discontinuity designs__.
+    
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Differences-in-Differences
+
+---
+
+layout: true
+
+&lt;div class="my-footer"&gt;&lt;img src="../img/logo/ScPo-shield.png" style="height: 60px;"/&gt;&lt;/div&gt; 
+
+---
+
+# Differences-in-Differences (DiD)
+
+* Usual starting point: subjects are not randomly allocated to treatment ⚠️
+
+--
+
+## DiD Requirements:
+
+--
+
+* 2 time periods: before and after treatment.
+
+--
+
+* 2 groups:
+
+--
+  - ***control group:*** never receives treatment,
+
+--
+
+  - ***treatment group:*** initially untreated and then fully treated.
+  
+--
+
+* Under certain assumptions, control group can be used as the counterfactual for treatment group  
+
+---
+
+# An Example: Minimum Wage and Employment
+
+--
+
+* Imagine you are interested in assessing the __causal__ impact of increasing the minimum wage on (un)employment.
+
+--
+
+* Why is this not that straightforward? What should the control group be?
+
+--
+
+* Seminal 1994 [paper](http://davidcard.berkeley.edu/papers/njmin-aer.pdf) by prominent labor economists David Card and Alan Krueger entitled "Minimum Wages and Employment: A Case Study of the Fast-Food Industry in New Jersey and Pennsylvania"
+
+--
+
+* Estimates the effect of an increase in the minimum wage on the employment rate in the fast-food industry. Why this industry?
+
+---
+
+# Institutional Details
+
+* In the US, there is a national minimum wage, but states can depart from it.
+
+--
+
+* April 1, 1992: New Jersey minimum wage increases from $4.25 to $5.05 per hour.
+
+--
+
+* Neighboring Pennsylvania did not change its minimum wage level.
+
+--
+
+.pull-left[
+&lt;img src="../img/photos/nj_penn_map.png" width="600px" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.pull-right[
+&lt;br&gt;
+&lt;br&gt;
+Pennsylvania and New Jersey are ***very similar***: similar institutions, similar habits, similar consumers, similar incomes, similar weather, etc.
+]
+---
+
+# Card and Krueger (1994): Methodology
+
+* Surveyed 410 fast-food establishments in New Jersey (NJ) and eastern Pennsylvania
+
+--
+
+* Timing:
+
+--
+  - Survey before NJ MW increase: Feb/March 1992
+
+--
+  - Survey after NJ MW increase: Nov/Dec 1992
+
+--
+
+* What comparisons do you think they did?
+
+--
+
+.pull-left[
+Let's take a closer at their data
+
+
+
+```r
+  # install package that contains the cleaned data
+remotes::install_github("b-rodrigues/diffindiff")
+  # load package
+library(diffindiff)
+  # load data
+ck1994 &lt;- njmin
+```
+]
+
+--
+
+.pull-right[
+
+```r
+ck1994 %&gt;%
+  select(sheet,chain,state,observation,empft,emppt) %&gt;%
+  head()
+```
+
+```
+## # A tibble: 6 x 6
+##   sheet chain  state        observation   empft emppt
+##   &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;        &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;
+## 1 46    bk     Pennsylvania February 1992  30    15  
+## 2 49    kfc    Pennsylvania February 1992   6.5   6.5
+## 3 506   kfc    Pennsylvania February 1992   3     7  
+## 4 56    wendys Pennsylvania February 1992  20    20  
+## 5 61    wendys Pennsylvania February 1992   6    26  
+## 6 62    wendys Pennsylvania February 1992   0    31
+```
+
+]
+
+---
+
+# Card and Krueger DiD: Tabular Results
+
+.center[__Average Employment Per Store Before and After the Rise in NJ Minimum Wage__]
+&lt;table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Variables &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Pennsylvania &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; New Jersey &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; FTE employment before &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; &lt;span style="     text-align: c;"&gt;23.33&lt;/span&gt; &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; &lt;span style="     text-align: c;"&gt;20.44&lt;/span&gt; &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; FTE employment after &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; &lt;span style="     text-align: c;"&gt;21.17&lt;/span&gt; &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; &lt;span style="     text-align: c;"&gt;21.03&lt;/span&gt; &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Change in mean FTE
+employment &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; &lt;span style=" font-weight: bold;    color: white !important;border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: rgba(253, 231, 37, 1) !important;text-align: c;"&gt;-2.17&lt;/span&gt; &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; &lt;span style=" font-weight: bold;    color: white !important;border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: rgba(68, 1, 84, 1) !important;text-align: center;"&gt;0.59&lt;/span&gt; &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+--
+
+* Employment in PA ***decreased*** while it ***increased*** in NJ!
+
+--
+
+## DiD Estimate
+
+Differences-in-differences causal estimate: `\(0.59 - (-2.17) = 2.76\)`
+
+--
+
+Interpretation: the minimum wage increase led to an __increase__ in FTE employment per store of 2.76 on average.
+
+--
+
+Yes the essence of differences-in-differences is _that_ simple! 😀
+
+--
+
+Let's look at these results graphically.
+
+---
+
+# DiD Graphically
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-6-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# DiD Graphically
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-7-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# DiD Graphically
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-8-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# DiD Graphically
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-9-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What if we had done a naive after/before comparison?
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-10-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What if we had done a naive after/before comparison?
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-11-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What if we had done a naive after NJ/PA comparison?
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-12-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What if we had done a naive after NJ/PA comparison?
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-13-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Estimation
+
+---
+
+layout: true
+
+&lt;div class="my-footer"&gt;&lt;img src="../img/logo/ScPo-shield.png" style="height: 60px;"/&gt;&lt;/div&gt; 
+
+---
+
+# DiD in Regression Form
+
+* In practice, DiD is usually estimated on more than 2 periods (4 observations)
+
+* There are more data points before and after the policy change
+
+--
+
+3 ingredients:
+
+--
+
+1. __Treatment dummy variable__: `\(TREAT_s\)` where the `\(s\)` subscript reminds us that the treatment is at the state level
+
+--
+
+1. __Post-treatment periods dummy variables__: `\(POST_t\)` where the `\(t\)` subscript reminds us that this variable varies over time
+
+--
+
+1. __Interaction term between the two__: `\(TREAT_s \times POST_t\)` 👉 the ***coefficient on this term is the DiD causal effect***!
+
+---
+
+# DiD in Regression Form
+
+__Treatment dummy variable__
+$$
+TREAT_s = \begin{cases}\begin{array}{lcl}
+0 \quad \text{if } s = \text{Pennsylvania} \\\
+1 \quad \text{if } s = \text{New Jersey}
+\end{array}\end{cases}
+$$
+
+--
+
+__Post-treatment periods dummy variable__
+$$
+POST_t = \begin{cases}\begin{array}{lcl}
+0 \quad \text{if } t &lt; \text{April 1, 1992} \\\
+1 \quad \text{if } t \geq \text{April 1, 1992}
+\end{array}\end{cases}
+$$
+
+--
+
+__Which observations correspond to `\(TREAT_s \times POST_t = 1\)`?__
+
+--
+
+* Let's put all these ingredients together:
+`$$EMP_{st} = \alpha + \beta TREAT_s + \gamma POST_t + \delta(TREAT_s \times POST_t) + \varepsilon_{st}$$`
+
+* `\(\delta\)`: causal effect of the minimum wage increase on employment
+
+---
+
+# Understanding the Regression
+
+`$$EMP_{st} = \color{#d96502}\alpha + \color{#027D83}\beta TREAT_s + \color{#02AB0D}\gamma POST_t + \color{#d90502}\delta(TREAT_s \times POST_t) + \varepsilon_{st}$$`
+
+--
+
+We have the following:
+
+--
+
+`\(\mathbb{E}(EMP_{st} \; | \; TREAT_s = 0, POST_t = 0) = \color{#d96502}\alpha\)`
+
+--
+
+`\(\mathbb{E}(EMP_{st} \; | \; TREAT_s = 0, POST_t = 1) = \color{#d96502}\alpha + \color{#02AB0D}\gamma\)`
+
+--
+
+`\(\mathbb{E}(EMP_{st} \; | \; TREAT_s = 1, POST_t = 0) = \color{#d96502}\alpha + \color{#027D83}\beta\)`
+
+--
+
+`\(\mathbb{E}(EMP_{st} \; | \; TREAT_s = 1, POST_t = 1) = \color{#d96502}\alpha + \color{#027D83}\beta + \color{#02AB0D}\gamma + \color{#d90502}\delta\)`
+
+--
+
+`$$[\mathbb{E}(EMP_{st} \; | \; TREAT_s = 1, POST_t = 1)-\mathbb{E}(EMP_{st} \; | \; TREAT_s = 1, POST_t = 0)] - \\
+[\mathbb{E}(EMP_{st} \; | \; TREAT_s = 0, POST_t = 1)-\mathbb{E}(EMP_{st} \; | \; TREAT_s = 0, POST_t = 0)] = \color{#d90502}\delta$$`
+
+---
+
+# Understanding the Regression
+
+`$$EMP_{st} = \color{#d96502}\alpha + \color{#027D83}\beta TREAT_s + \color{#02AB0D}\gamma POST_t + \color{#d90502}\delta(TREAT_s \times POST_t) + \varepsilon_{st}$$`
+
+In table form:
+
+
+   | Pre mean | Post mean | `\(\Delta\)`(post - pre)
+:-:|:--:|:--:|:--:
+Pennsylvania (PA) | `\(\color{#d96502}\alpha\)` | `\(\color{#d96502}\alpha + \color{#02AB0D}\gamma\)` | `\(\color{#02AB0D}\gamma\)`
+New Jersey (NJ) | `\(\color{#d96502}\alpha + \color{#027D83}\beta\)` | `\(\color{#d96502}\alpha + \color{#027D83}\beta + \color{#02AB0D}\gamma + \color{#d90502}\delta\)` | `\(\color{#02AB0D}\gamma + \color{#d90502}\delta\)`
+`\(\Delta\)`(NJ - PA) | `\(\color{#027D83}\beta\)` | `\(\color{#027D83}\beta + \color{#d90502}\delta\)` | `\(\color{#d90502}\delta\)`
+
+--
+
+This table generalizes to other settings by substituting *Pennsylvania* with *Control* and *New Jersey* with *Treatment*
+---
+
+class: inverse
+
+# Task 2 (10 minutes)
+
+1. Create a dummy variable, `treat`, equal to `FALSE` if `state` is Pennsylvania and `TRUE` if New Jersey.
+
+1. Create a dummy variable, `post`, equal to `FALSE` if `observation` is February 1992 and `TRUE` otherwise.
+
+1. Estimate the following regression model. Do you obtain the same results as in slide 9?
+
+`$$empfte_{st} = \alpha + \beta treat_s + \gamma post_t + \delta(treat_s \times post_t) + \varepsilon_{st}$$`
+
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Identifying Assumptions
+
+---
+
+layout: true
+
+&lt;div class="my-footer"&gt;&lt;img src="../img/logo/ScPo-shield.png" style="height: 60px;"/&gt;&lt;/div&gt; 
+
+---
+
+# DiD Crucial Assumption: Parallel Trends
+
+&gt; __Common or parallel trends assumption__: absent any minimum wage increase, Pennsylvania's fast-food employment trend would have been what we should have expected to see in New Jersey.
+
+--
+
+* This assumption states that Pennsylvania's fast-food employment trend between February and November 1992 provides a reliable counterfactual employment trend New Jersey's fast-food industry *would have experienced* had New Jersey not increased its minimum wage.
+
+--
+
+* Impossible to completely validate or invalidate this assumption.
+
+* *Intuitive check:* compare trends before policy change (and after policy change if no expected medium-term effects)
+
+---
+
+#  Parallel Trends: Graphically
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-14-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Checking the parallel trends assumption
+
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-15-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Checking the parallel trends assumption
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-16-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Parallel trends assumption `\(\rightarrow\)` Verified ✅
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-17-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Parallel trends assumption `\(\rightarrow\)` Verified ✅
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-18-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Parallel trends assumption `\(\rightarrow\)` Not verified ❌
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-19-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Parallel trends assumption `\(\rightarrow\)` Not verified ❌
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-20-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Parallel trends assumption `\(\rightarrow\)` Not verified ❌
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-21-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Parallel trends assumption `\(\rightarrow\)` Not verified ❌
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-22-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Regression Discontinuity Design
+
+---
+
+layout: true
+
+&lt;div class="my-footer"&gt;&lt;img src="../img/logo/ScPo-shield.png" style="height: 60px;"/&gt;&lt;/div&gt; 
+
+---
+
+# Regression Discontinuity Design (RDD)
+
+* Very common research design in applied research because it provides credible causal estimates.
+
+--
+
+* Starting point: subjects are ***not*** randomly allocated to treatment ⚠️
+
+--
+
+* RDD can be applied when we have specific information about the rules determining treatment.
+
+--
+
+* __RDD__ exploits this precise information about allocation to treatment!
+
+---
+
+# Discontinuities are Everywhere
+
+There are many arbitrary rules in life that determine assignment to some treatment:
+  
+--
+  
+* In North Carolina, you used to have to have reached the age of five by October 16 in the relevant year to be eligible to enter kindergarten [(Cook and Kang, 2016)](https://pubs.aeaweb.org/doi/pdfplus/10.1257/app.20140323);
+  
+--
+  
+* In the US, a new born baby weighing less than 1,500 grams is considered to be of "very low birth weight" and receive additional treatment [(Almond et al., 2010)](https://academic.oup.com/qje/article/125/2/591/1882183);
+  
+--
+
+* Flagship state universities use a certain SAT cutoff level to select their students [(Hoekstra, 2009)](https://cdn.theatlantic.com/static/mt/assets/business/Hoekstra_Flagship.pdf);
+
+--
+
+* In Italy, there are quotas of residence permits for illegal immigrants that are allocated on a first-come first-served basis until quota is exhausted [(Pinotti, 2017)](https://pubs.aeaweb.org/doi/pdfplus/10.1257/aer.20150355);
+
+--
+
+We will focus our analysis on the following discontinuity:
+
+* In the US, the legal drinking age is 21 years old [(Carpenter and Dobkin, 2009)](http://masteringmetrics.com/wp-content/uploads/2015/01/Carpenter-and-Dobkin-2009.pdf).
+
+---
+
+# An Example: Alcohol Consumption and Mortality
+
+--
+
+* Imagine you are interested in assessing the __causal__ impact of alcohol consumption by young adults on mortality.
+
+--
+
+* Why is this not that straightforward? Why can't you just regress alcohol consumption on dying age and cause of death?
+
+--
+
+  * Because there may be unobserved selection into alcohol consumption that may also be a determinant of mortality.
+  
+--
+
+* In the US, alcohol consumption is prohibited before the age of 21.
+
+--
+
+* Debate on whether the minimum legal drinking age (MLDA) should be lowered to 18, as was the case in the Vietnam-era.
+
+---
+
+# Key Terms and Intuition
+
+&gt; ***Running variable:*** variable that determines assignment to treatment.
+
+--
+
+`\(\rightarrow\)` `\(a\)` = age
+
+--
+
+&gt; ***Cutoff level:*** level of the ***running variable*** above (or below) which individuals are treated (or not).
+
+--
+
+`\(\rightarrow\)` `\(c = 21\)` year old birthday
+
+--
+
+Causal intuition:
+
+* How different are individuals *just before* and *just after* their 21st birthday, other than legal access to alcohol?
+
+--
+
+* Around the threshold, allocation to treatment is ***as good as random***.
+
+--
+
+* 👉 ***Regression discontinuity design*** exploits this allocation to treatment!
+
+---
+
+# Carpenter and Dobkin's data
+
+* Let's take a closer at the data used in the paper
+
+.pull-left[
+
+```r
+# install package containing data
+devtools::install_github("jrnold/masteringmetrics",
+                         subdir = "masteringmetrics")
+
+# load package
+library(masteringmetrics)
+# load data
+data("mlda", package = "masteringmetrics")
+```
+]
+
+--
+
+.pull-right[
+
+```
+## # A tibble: 6 x 7
+##   agecell   all internal external alcohol homicide suicide
+##     &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+## 1    19.1  92.8     16.6     76.2   0.639     16.3    11.2
+## 2    19.2  95.1     18.3     76.8   0.677     16.9    12.2
+## 3    19.2  92.1     18.9     73.2   0.866     15.2    11.7
+## 4    19.3  88.4     16.1     72.3   0.867     16.7    11.3
+## 5    19.4  88.7     17.4     71.3   1.02      14.9    11.0
+## 6    19.5  90.2     17.9     72.3   1.17      15.6    12.2
+```
+]
+
+--
+
+* This dataset contains aggregate death rates (and their causes) for different age groups (`agecell`) between 19 and 23 years old.
+
+---
+
+# Sharp Discontinuity at Cutoff
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-25-1.svg" style="display: block; margin: auto;" /&gt;
+
+At the threshold, the probability of being treated jumps from 0 to 1.
+
+---
+
+# Sharp Discontinuity at Cutoff
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-26-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Sharp Discontinuity at Cutoff
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-27-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# RDD Framework
+
+* ***Treatment variable***: `\(D_a\)`
+
+--
+
+  - `\(D_a\)` = 1 if individual is over 21 years old, `\(D_a\)` = 0 if not.
+
+--
+
+  - `\(D_a\)` is a function of the individual's age, `\(a\)`, which is the ***running variable***.
+  
+--
+
+* The ***cutoff*** age, 21, separates those who can drink legally and those who can't:
+  $$
+  D_a = \begin{cases}\begin{array}{lcl}
+  1 \quad \text{if } a \geq 21 \\\
+  0 \quad \text{if } a &lt; 21
+  \end{array}\end{cases}
+  $$
+  
+## Key features of RD designs
+
+1. Treatment status is a __deterministic__ function of `\(a\)` `\(\rightarrow\)` we know the assignment rule
+
+--
+
+1. Treatment status is a __discontinuous__ function of `\(a\)` `\(\rightarrow\)` there is some cutoff level
+
+---
+
+# Graphical Results: All Death Rates
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-28-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Graphical Results: All Death Rates
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-29-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Graphical Results: All Death Rates
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-30-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Graphical Results: All Death Rates
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-31-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# RDD as Local Average Treatment Effect (LATE)
+
+* The RD estimator is a __local average treatment effect (LATE)__.
+
+--
+
+* It only tells you the impact of treatment `\(D\)` on outcome `\(Y\)` ***around*** the cutoff value of the running variable.
+
+--
+
+* Limited ***external validity*** `\(\rightarrow\)` you cannot extrapolate to the entire population.
+
+--
+
+* Using the 21 year old alcohol restriction age in the RD context will only tell you the effect of this restriction on death rates but not the general effect of alcohol consumption.
+
+--
+
+* One may easily argue that all results from quantitative empirical analyses have a local nature.
+
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Estimation
+
+---
+
+layout: true
+
+&lt;div class="my-footer"&gt;&lt;img src="../img/logo/ScPo-shield.png" style="height: 60px;"/&gt;&lt;/div&gt; 
+
+---
+
+# Estimation
+
+* *Objective:* measure ***gap*** between the two lines at the cutoff.
+
+--
+
+* In its simplest form, we can write the following regression model:
+    `$$DEATHRATE_a = \alpha + \delta D_a + \beta a + \varepsilon_i,$$`
+  where `\(DEATHRATE_a\)` is the death rate at age `\(a\)`, `\(D_a\)` is the treatment dummy, and `\(a\)` is age (defined in months relative to 21st birthday).
+
+--
+
+  `\(\rightarrow\)` `\(\delta\)` captures the **jump in death rate** between individuals above and below 21 years old.
+
+--
+
+* The RDD estimator exploits a discontinuity at `\(a = 21\)` in the conditional expectation function:
+`$$\underbrace{\lim_{c \to 21^+} \mathbb{E}[DEATHRATE_a|a = c]}_{\alpha + \delta} - \underbrace{\lim_{c \to 21^-} \mathbb{E}[DEATHRATE_a|a = c]}_{\alpha} = \delta$$`
+
+---
+
+class: inverse
+
+# Task 2 (5 minutes)
+
+1. Estimate the following model on all death causes.
+`$$DEATHRATE_a = \alpha + \delta D_a + \beta a + \varepsilon_i,$$`
+
+ Does the RDD coefficient correspond to the graphical illustration?
+ 
+1. How do you interpret each coefficient?
+
+1. What is the causal effect of legal access to alcohol on death rates?
+
+---
+
+# Estimation #1: Simple Linear Model
+
+`$$DEATHRATE_a = \alpha + \delta D_a + \beta a + \varepsilon_a,$$`
+
+.pull-left[
+
+```r
+mlda &lt;- mlda %&gt;%
+  mutate(over21 = (agecell &gt;= 21),
+         agecell_21 = agecell - 21)
+rdd &lt;- lm(all ~ agecell_21 + over21, mlda)
+
+library(broom)
+tidy(rdd)
+```
+]
+
+.pull-right[
+
+```
+## # A tibble: 3 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)   91.8       0.805    114.   4.59e-57
+## 2 agecell_21    -0.975     0.632     -1.54 1.30e- 1
+## 3 over21TRUE     7.66      1.44       5.32 3.15e- 6
+```
+]
+
+--
+
+&lt;br&gt;
+
+***Interpretation:***
+
+--
+
+On average, the MLDA increases death rates from all causes by 7.66 percentage points.
+
+--
+
+This is a big effect considering the average death rate for individuals between 19 and 22 is:
+
+
+```r
+mean(mlda$all, na.rm = TRUE)
+```
+
+```
+## [1] 95.67272
+```
+
+
+---
+
+# Estimation Issues
+
+* The ***functional form*** used to approximate the lines really matters!
+
+--
+
+   `\(\rightarrow\)` an insufficiently flexible specification runs the risk of mistaking nonlinearity for treatment effect;
+
+--
+   
+   `\(\rightarrow\)` an overly flexible specification reduces precision and runs the risk of overfitting.
+
+
+---
+
+# Simulations - Linear Relationship and Clear Discontinuity
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-35-1.svg" style="display: block; margin: auto;" /&gt;
+
+--
+
+`$$outcome_i = \alpha + \delta treatment_i + \beta running_i + e_i,$$`
+
+---
+
+# Simulations - Linear Relationship and Clear Discontinuity
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-36-1.svg" style="display: block; margin: auto;" /&gt;
+
+`$$outcome_i = \alpha + \color{#d90502}\delta treatment_i + \beta running_i + e_i,$$`
+
+---
+
+# Simulations - Quadratic Relationship and Clear Discontinuity
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-37-1.svg" style="display: block; margin: auto;" /&gt;
+
+--
+
+`$$outcome_i = \alpha + \delta treatment_i + \beta_1 running_i + \color{#d90502}{\beta_2 running_i^2} + e_i,$$`
+
+---
+
+# Simulations - Quadratic Relationship and Clear Discontinuity
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-38-1.svg" style="display: block; margin: auto;" /&gt;
+
+`$$outcome_i = \alpha + \color{#d90502}\delta treatment_i + \beta_1 running_i + \beta_2 running_i^2 + e_i,$$`
+
+---
+
+# Simulations - Linear Relationship but NO Discontinuity
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-39-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Simulations - Different Slopes
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-40-1.svg" style="display: block; margin: auto;" /&gt;
+
+--
+
+`$$outcome_i = \alpha + \delta treatment_i + \beta (running_i - cutoff) + \\ \color{#d90502}{\gamma treatment_i * (running_i - cutoff)} + e_i,$$`
+
+---
+
+# Simulations - Different (Linear) Slopes
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-41-1.svg" style="display: block; margin: auto;" /&gt;
+
+`$$outcome_i = \alpha + \color{#d90502}\delta treatment_i + \beta (running_i - cutoff) + \\ \gamma treatment_i * (running_i - cutoff) + e_i,$$`
+
+---
+
+# How to Choose Appropriate Functional Form?
+
+* Essential to __visualise__ the data!
+
+--
+
+* Coefficients across models shouldn't vary too much.
+
+--
+
+* Should we expect the relationship between the outcome variable and the running variable to be nonlinear? Should we expect it to differ around the cutoff?
+
+--
+
+* [Gelman and Imbens (2019)](https://www.tandfonline.com/doi/abs/10.1080/07350015.2017.1366909), "Why High-Order Polynomials Should Not Be Used in Regression Discontinuity Designs":  
+  *"We recommend researchers [...] use estimators based on local linear or quadratic polynomials or other smooth functions."*
+
+---
+
+class: inverse
+
+# Task 3 (10 minutes)
+
+1. Estimate the following *quadratic* model on all death causes. Does the RDD coefficient differ from the linear model? 
+`$$DEATHRATE_a = \alpha + \delta D_a + \beta a + \beta a^2 + \varepsilon_a,$$`
+
+1. Recall that the regression model allowing for different slopes on each side of the cutoff is:
+`$$DEATHRATE_a = \alpha + \delta D_a + \beta (a - 21) + \gamma D_a * (a - 21) + \varepsilon_a,$$`
+   - Why do we need to substract the `\(21\)` from `a`? (Hint: compute `\(\mathbb{E}(DEATHRATE_a|a=21)\)`)
+   - Should we expect the relationship between death rates and age to change at 21?
+   - Estimate this model. How different is the RDD coefficient from the other models you have estimated?
+
+---
+
+# Graphical Representation of the Regression Results
+
+&lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-42-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Nonparametric Estimation
+
+* Give more weight to observations close to the cutoff level
+
+--
+
+2 settings:
+
+  * How much more weight?
+
+--
+  
+  `\(\rightarrow\)` depends on the chosen ***kernel***.
+
+--
+
+  * How far away from the cutoff do observations need to be to be discarded?
+  
+--
+
+  `\(\rightarrow\)` depends on the chosen ***bandwidth***.
+  
+--
+
+Luckily there's an `R` package that chooses these settings optimally based on fancy algorythms: `rdrobust`.
+
+---
+
+layout: false
+class: title-slide-section-red, middle
+
+# Identifying Assumptions
+
+---
+
+layout: true
+
+&lt;div class="my-footer"&gt;&lt;img src="../img/logo/ScPo-shield.png" style="height: 60px;"/&gt;&lt;/div&gt; 
+
+---
+
+# RDD Assumptions
+
+&gt; *Key assumption*: ***Potential outcomes are smooth at the threshold.***
+
+--
+
+`\(\rightarrow\)` assignment variable cannot be manipulated!
+
+--
+
+Formally:
+
+`$$\lim_{r \to c+} E[Y_i^d|r] = \lim_{r \to c-} E[Y_i^d|r], d \in \{0,1\}$$`
+
+--
+
+* The population just below must not be discretely different from the population just above the cutoff.
+
+--
+
+* Assumption is violated if people can manipulate the running variable because they know the cutoff value.
+
+--
+
+  * Knowing the cutoff value in itself does not violate the assumption, only ability to manipulate running variable does.
+
+---
+
+# Example of Manipulation: French Baccalaureate Grades
+
+&lt;img src="../img/photos/manipulation_rdd.png" width="700px" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Noncompliance
+
+What if the running variable does not *fully* determine assignment to treatment?
+
+`\(\rightarrow\)` ***Fuzzy RDD***
+
+* Even if all observations that satisfy the treatment condition are not treated, there is still a jump in the probability of being treated.
+
+* For you, just know that problem of imperfect determination of allocation to treatment can still be solved
+
+---
+
+# 5 Steps for Conducting RDD in Practice&lt;sup&gt;1&lt;/sup&gt;
+
+.footnote[
+&lt;sup&gt;1&lt;/sup&gt; Taken from [Andrew Heiss' wonderful course on RDD](https://evalsp20.classes.andrewheiss.com/class/11-class/).
+]
+
+### Step #1: ***Is assignment to treatment rule-based?***
+
+--
+
+### Step #2: ***Is design sharp or fuzzy?***
+
+--
+
+### Step #3: ***Is there a discontinuity in running variable at cutoff?***
+
+--
+
+### Step #4: ***Is there a discontinuity in outcome variable at cutoff in running variable?***
+
+--
+
+### Step #5: ***How big is the gap?***
+
+---
+class: title-slide-final, middle
+background-image: url(../img/logo/ScPo-econ.png)
+background-size: 250px
+background-position: 9% 19%
+
+# END
+
+
+
+
+|                                                                                                            |                                   |
+| :--------------------------------------------------------------------------------------------------------- | :-------------------------------- |
+| &lt;a href="mailto:florian.oswald@sciencespo.fr"&gt;.ScPored[&lt;i class="fa fa-paper-plane fa-fw"&gt;&lt;/i&gt;]               | florian.oswald@sciencespo.fr       |
+| &lt;a href="https://github.com/ScPoEcon/ScPoEconometrics-Slides"&gt;.ScPored[&lt;i class="fa fa-link fa-fw"&gt;&lt;/i&gt;] | Slides |
+| &lt;a href="https://scpoecon.github.io/ScPoEconometrics"&gt;.ScPored[&lt;i class="fa fa-link fa-fw"&gt;&lt;/i&gt;] | Book |
+| &lt;a href="http://twitter.com/ScPoEcon"&gt;.ScPored[&lt;i class="fa fa-twitter fa-fw"&gt;&lt;/i&gt;]                          | @ScPoEcon                         |
+| &lt;a href="http://github.com/ScPoEcon"&gt;.ScPored[&lt;i class="fa fa-github fa-fw"&gt;&lt;/i&gt;]                          | @ScPoEcon                       |
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="../js/ru_xaringan.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
