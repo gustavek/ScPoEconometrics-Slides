@@ -1,6 +1,6 @@
 ---
 title: "ScPoEconometrics"
-subtitle: "Differences-in-Differences"
+subtitle: "Differences-in-Differences and Regression Discontinuity Design"
 author: "Florian Oswald, Gustave Kenedi and Pierre Villedieu"
 date: "SciencesPo Paris </br> `r Sys.Date()`"
 output:
@@ -1663,7 +1663,7 @@ $$\lim_{r \to c+} E[Y_i^d|r] = \lim_{r \to c-} E[Y_i^d|r], d \in \{0,1\}$$
 --
 
   * Knowing the cutoff value in itself does not violate the assumption, only ability to manipulate running variable does.
-
+  
 ---
 
 # Example of Manipulation: French Baccalaureate Grades
