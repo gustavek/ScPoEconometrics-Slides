@@ -928,29 +928,23 @@ Causal intuition:
 
 * Let's take a closer at the data used in the paper
 
-.pull-left[
 ```{r, echo = TRUE, eval = TRUE}
 # install package containing data
 devtools::install_github("jrnold/masteringmetrics",
                          subdir = "masteringmetrics")
 
-# load package
-library(masteringmetrics)
 # load data
 data("mlda", package = "masteringmetrics")
 ```
-]
 
 --
 
-.pull-right[
 ```{r, echo = FALSE}
 mlda %>%
   select(agecell, all, internal, external,
          alcohol, homicide, suicide) %>%
   head()
 ```
-]
 
 --
 
@@ -1185,7 +1179,7 @@ class: inverse
 
 # Task 2 (5 minutes)
 
-1. Estimate the following model on all death causes.
+1. Estimate the following model on `all` death causes.
 $$DEATHRATE_a = \alpha + \delta D_a + \beta a + \varepsilon_i,$$
 
  Does the RDD coefficient correspond to the graphical illustration?
@@ -1465,7 +1459,7 @@ rdd_nodisc
 
 ---
 
-# Simulations - Different Slopes
+# Simulations - Different (Linear) Slopes
 
 ```{r, echo = FALSE, fig.height = 4.5, fig.width = 10}
 set.seed(1234)
@@ -1564,7 +1558,7 @@ class: inverse
 
 # Task 3 (10 minutes)
 
-1. Estimate the following *quadratic* model on all death causes. Does the RDD coefficient differ from the linear model? 
+1. Estimate the following *quadratic* model on `all` death causes. Does the RDD coefficient differ from the linear model? 
 $$DEATHRATE_a = \alpha + \delta D_a + \beta a + \beta a^2 + \varepsilon_a,$$
 
 1. Recall that the regression model allowing for different slopes on each side of the cutoff is:
@@ -1647,12 +1641,6 @@ layout: true
 --
 
 $\rightarrow$ assignment variable cannot be manipulated!
-
---
-
-Formally:
-
-$$\lim_{r \to c+} E[Y_i^d|r] = \lim_{r \to c-} E[Y_i^d|r], d \in \{0,1\}$$
 
 --
 
