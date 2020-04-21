@@ -90,7 +90,7 @@ layout: true
 
 ---
 
-# Evaluation methods
+# Program Evaluation
 
 * Multiple regression often does not provide causal estimates because of ***selection on unobservables***.
 
@@ -631,11 +631,13 @@ class: inverse
 
 # Task 2 (10 minutes)
 
+1. Create a full-time equivalent (FTE) employees variable called `empfte` equal to `empft` + 0.5*`emppt` + `nmgrs`. `empft` and `emppt` correspond respectively to the number of full-time and part-time employees. `nmgrs` corresponds to the number of managers. This is how Card and Krueger compute their full-time equivalent (FTE) employment variable (p.775 of the paper).
+
 1. Create a dummy variable, `treat`, equal to `FALSE` if `state` is Pennsylvania and `TRUE` if New Jersey.
 
 1. Create a dummy variable, `post`, equal to `FALSE` if `observation` is February 1992 and `TRUE` otherwise.
 
-1. Estimate the following regression model. Do you obtain the same results as in slide 9?
+1. Estimate the following regression model. Do you obtain the same results as in slide 9 $(\approx 2.76)$?
 
 $$empfte_{st} = \alpha + \beta treat_s + \gamma post_t + \delta(treat_s \times post_t) + \varepsilon_{st}$$
 
