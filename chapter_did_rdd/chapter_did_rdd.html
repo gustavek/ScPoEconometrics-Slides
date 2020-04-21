@@ -17,7 +17,7 @@ class: center, middle, inverse, title-slide
 # ScPoEconometrics
 ## Differences-in-Differences and Regression Discontinuity Design
 ### Florian Oswald, Gustave Kenedi and Pierre Villedieu
-### SciencesPo Paris </br> 2020-04-20
+### SciencesPo Paris </br> 2020-04-21
 
 ---
 
@@ -71,7 +71,7 @@ layout: true
 
 ---
 
-# Evaluation methods
+# Program Evaluation
 
 * Multiple regression often does not provide causal estimates because of ***selection on unobservables***.
 
@@ -477,11 +477,13 @@ class: inverse
 
 # Task 2 (10 minutes)
 
+1. Create a full-time equivalent (FTE) employees variable called `empfte` equal to `empft` + 0.5*`emppt` + `nmgrs`. `empft` and `emppt` correspond respectively to the number of full-time and part-time employees. `nmgrs` corresponds to the number of managers. This is how Card and Krueger compute their full-time equivalent (FTE) employment variable (p.775 of the paper).
+
 1. Create a dummy variable, `treat`, equal to `FALSE` if `state` is Pennsylvania and `TRUE` if New Jersey.
 
 1. Create a dummy variable, `post`, equal to `FALSE` if `observation` is February 1992 and `TRUE` otherwise.
 
-1. Estimate the following regression model. Do you obtain the same results as in slide 9?
+1. Estimate the following regression model. Do you obtain the same results as in slide 9 `\((\approx 2.76)\)`?
 
 `$$empfte_{st} = \alpha + \beta treat_s + \gamma post_t + \delta(treat_s \times post_t) + \varepsilon_{st}$$`
 
@@ -690,23 +692,18 @@ Causal intuition:
 
 * Let's take a closer at the data used in the paper
 
-.pull-left[
 
 ```r
 # install package containing data
 devtools::install_github("jrnold/masteringmetrics",
                          subdir = "masteringmetrics")
 
-# load package
-library(masteringmetrics)
 # load data
 data("mlda", package = "masteringmetrics")
 ```
-]
 
 --
 
-.pull-right[
 
 ```
 ## # A tibble: 6 x 7
@@ -719,7 +716,6 @@ data("mlda", package = "masteringmetrics")
 ## 5    19.4  88.7     17.4     71.3   1.02      14.9    11.0
 ## 6    19.5  90.2     17.9     72.3   1.17      15.6    12.2
 ```
-]
 
 --
 
@@ -863,7 +859,7 @@ class: inverse
 
 # Task 2 (5 minutes)
 
-1. Estimate the following model on all death causes.
+1. Estimate the following model on `all` death causes.
 `$$DEATHRATE_a = \alpha + \delta D_a + \beta a + \varepsilon_i,$$`
 
  Does the RDD coefficient correspond to the graphical illustration?
@@ -986,7 +982,7 @@ mean(mlda$all, na.rm = TRUE)
 
 ---
 
-# Simulations - Different Slopes
+# Simulations - Different (Linear) Slopes
 
 &lt;img src="chapter_did_rdd_files/figure-html/unnamed-chunk-40-1.svg" style="display: block; margin: auto;" /&gt;
 
@@ -1027,7 +1023,7 @@ class: inverse
 
 # Task 3 (10 minutes)
 
-1. Estimate the following *quadratic* model on all death causes. Does the RDD coefficient differ from the linear model? 
+1. Estimate the following *quadratic* model on `all` death causes. Does the RDD coefficient differ from the linear model? 
 `$$DEATHRATE_a = \alpha + \delta D_a + \beta a + \beta a^2 + \varepsilon_a,$$`
 
 1. Recall that the regression model allowing for different slopes on each side of the cutoff is:
@@ -1092,12 +1088,6 @@ layout: true
 --
 
 `\(\rightarrow\)` assignment variable cannot be manipulated!
-
---
-
-Formally:
-
-`$$\lim_{r \to c+} E[Y_i^d|r] = \lim_{r \to c-} E[Y_i^d|r], d \in \{0,1\}$$`
 
 --
 
