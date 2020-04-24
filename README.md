@@ -8,7 +8,7 @@
 
 | Lecture | HTML | PDF | Tasks |
 |---------|:----:|:---:|-------|
-| Lecture 1: Introduction | [HTML](https://raw.githack.com/ScPoEcon/ScPoEconometrics-Slides/master/chapter1/chapter1.html) | [PDF](https://rawcdn.githack.com/ScPoEcon/ScPoEconometrics-Slides/master/chapter1/chapter1.pdf) | [Task 1]() [Task 2]() [Task 3]() |
+| Lecture 1: Introduction | [HTML](https://raw.githack.com/ScPoEcon/ScPoEconometrics-Slides/master/chapter1/chapter1.html) | [PDF](https://rawcdn.githack.com/ScPoEcon/ScPoEconometrics-Slides/master/chapter1/chapter1.pdf) | [Task 1]()   [Task 2]()   [Task 3]() |
 | Lectures 2/3: Summarizing, Visualizing and Tidying Data | [HTML](https://raw.githack.com/ScPoEcon/ScPoEconometrics-Slides/master/chapter2/chapter2.html) | [PDF](https://rawcdn.githack.com/ScPoEcon/ScPoEconometrics-Slides/master/chapter2/chapter2.pdf) | [Task 1]() [Task 2]() [Task 3]() |
 | Lecture 4: Simple Linear Regression | [HTML](https://raw.githack.com/ScPoEcon/ScPoEconometrics-Slides/master/chapter3/chapter3.html) | [PDF](https://rawcdn.githack.com/ScPoEcon/ScPoEconometrics-Slides/master/chapter3/chapter3.pdf) | [Task 1]() [Task 2]() [Task 3]() |
 | Lecture 5: Introduction to Causality | [HTML](https://raw.githack.com/ScPoEcon/ScPoEconometrics-Slides/master/chapter_causality/causality.html) | [PDF](https://rawcdn.githack.com/ScPoEcon/ScPoEconometrics-Slides/master/chapter_causality/causality.pdf) | [Task 1]() [Task 2]() [Task 3]() |
